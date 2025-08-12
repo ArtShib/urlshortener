@@ -13,10 +13,10 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 	repo := repository.NewRepository()
-	svc := service.NewUrlService(repo, cfg.HttpServer)
+	svc := service.NewURLService(repo, cfg.HTTPServer)
 	router := router.NewRouter(svc)
 
-	err := http.ListenAndServe(strings.Replace(cfg.HttpServer.Port, "::", ":", -1), router)	
+	err := http.ListenAndServe(strings.Replace(cfg.HTTPServer.Port, "::", ":", -1), router)	
 	if err != nil{
 		panic(err)
 	}
