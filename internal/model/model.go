@@ -1,17 +1,17 @@
 package model
 
 type URL struct{
-	LongUrl string
-	ShortUrl string
+	LongURL string
+	ShortURL string
 	ShortCode string
 }
 
 
-type HttpServerConfig struct {
+type HTTPServerConfig struct {
 	Host string
 	Port string
 }
 
 type ShortServiceConfig struct {
-	ShortUrl string
+	ShortURL string
 }
