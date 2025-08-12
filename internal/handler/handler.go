@@ -7,22 +7,22 @@ import (
 )
 
 
-type UrlService interface {
+type URLService interface {
 	Shorten(url string) (string, error)
 	GetID(shortCode string) (string, error)
 }
 
-type UrlHandler struct{
-	service UrlService
+type URLHandler struct{
+	service URLService
 }
 
-func NewUrlHandler(svc UrlService) *UrlHandler {
-	return &UrlHandler{
+func NewURLHandler(svc URLService) *URLHandler {
+	return &URLHandler{
 		service: svc,
 	}
 }
 
-func (h *UrlHandler) Shorten(w http.ResponseWriter, r *http.Request) {
+func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
@@ -37,7 +37,7 @@ func (h *UrlHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortUrl, err := h.service.Shorten(string(body))
+	shortURL, err := h.service.Shorten(string(body))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,13 +45,13 @@ func (h *UrlHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(201)
 	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Content-Length", strconv.Itoa(len(shortUrl)))
+	w.Header().Set("Content-Length", strconv.Itoa(len(shortURL)))
 
-	w.Write([]byte(shortUrl))
+	w.Write([]byte(shortURL))
 
 }
 
-func (h *UrlHandler) GetID(w http.ResponseWriter, r *http.Request) {
+func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -63,14 +63,14 @@ func (h *UrlHandler) GetID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	longUrl, err := h.service.GetID(shortCode) 
+	longURL, err := h.service.GetID(shortCode) 
 	
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	
-	w.Header().Set("Location", longUrl)
+	w.Header().Set("Location", longURL)
 	w.WriteHeader(307)
 
 }
