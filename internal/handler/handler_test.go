@@ -7,34 +7,29 @@ import (
 	"testing"
 )
 
-// type UrlTest struct {
-// 	LongUrl string
-// 	ShortUrl string
-// 	ShortCode string
-// }
 
-type UrlServiceTest struct {
+type URLServiceTest struct {
 	Shortenfunc func(url string) (string, error)
 	GetIDfunc func(shortCode string) (string, error)
 }
 
 
-func(s *UrlServiceTest) Shorten(url string) (string, error) {
+func(s *URLServiceTest) Shorten(url string) (string, error) {
 	return s.Shortenfunc(url)
 } 
 
-func(s * UrlServiceTest) GetID(shortCode string) (string, error) {
+func(s * URLServiceTest) GetID(shortCode string) (string, error) {
 	return s.GetIDfunc(shortCode)
 }
 
 func TestUrlHandler_Shorten(t *testing.T) {
-	urlServiceTest := &UrlServiceTest{
+	urlServiceTest := &URLServiceTest{
 		Shortenfunc: func(url string) (string, error) {
 			return "sedczfrH", nil
 		},
 	}
 	
-	handler := NewUrlHandler(urlServiceTest)
+	handler := NewURLHandler(urlServiceTest)
 
 	bodyReq := strings.NewReader(`https://yandex.ru`)
 	req := httptest.NewRequest("POST", "/", bodyReq)
@@ -49,14 +44,14 @@ func TestUrlHandler_Shorten(t *testing.T) {
 	}	
 }
 
-func TestUrlHandler_GetID(t *testing.T) {
-	urlServiceTest := &UrlServiceTest{
+func TestURLHandler_GetID(t *testing.T) {
+	urlServiceTest := &URLServiceTest{
 		GetIDfunc: func(url string) (string, error) {
 			return "sedczfrH", nil
 		},
 	}
 	
-	handler := NewUrlHandler(urlServiceTest)
+	handler := NewURLHandler(urlServiceTest)
 
 	req := httptest.NewRequest("GET", "/e9db20b2", nil)
 
