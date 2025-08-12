@@ -7,15 +7,15 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type UrlService interface {
+type URLService interface {
 	Shorten(url string) (string, error)
 	GetID(shortCode string) (string, error)
 }
 
-func NewRouter(svc UrlService) http.Handler {
+func NewRouter(svc URLService) http.Handler {
 	//mux := http.NewServeMux()
 	mux := chi.NewRouter()
-	handler := handler.NewUrlHandler(svc)
+	handler := handler.NewURLHandler(svc)
 
 	// mux.HandleFunc(`/`, handler.Shorten)
 	// mux.HandleFunc(`/{shortCode}`, handler.GetID)
