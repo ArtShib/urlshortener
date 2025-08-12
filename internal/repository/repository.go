@@ -1,0 +1,14 @@
+package repository
+
+import (
+	"github.com/ArtShib/urlshortener/internal/model"
+	"github.com/ArtShib/urlshortener/internal/repository/memory"
+)
+
+type UrlRepository interface {
+	Store(url *model.URL) error
+	FindByShortCode(shortCode string) (*model.URL, error)
+}
+func NewRepository() UrlRepository{
+	return memory.NewMemoryRepository()
+}
