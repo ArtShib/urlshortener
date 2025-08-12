@@ -8,10 +8,6 @@ import (
 )
 
 func TestRepo(t *testing.T) {
-	// type want struct{
-	// 	shortUrl string,
-
-	// }
 	tests := []struct{
 		name string
 		url model.URL
@@ -20,7 +16,7 @@ func TestRepo(t *testing.T) {
 		{
 			name:    "test add and get",
 			url: model.URL{
-				LongUrl: "https://www.yandex.com/",
+				LongURL: "https://www.yandex.com/",
 				ShortCode: "a4d1as",
 			},
 			want: "a4d1as",
@@ -37,7 +33,7 @@ func TestRepo(t *testing.T) {
 			if err != nil{
 				assert.Errorf(t,err, "longUrl is not found")
 			}	
-			assert.Equal(t, url.LongUrl, test.url.LongUrl)
+			assert.Equal(t, url.LongURL, test.url.LongURL)
 		})
 	}	
 }
