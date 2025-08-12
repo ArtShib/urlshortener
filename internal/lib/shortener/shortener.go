@@ -10,6 +10,6 @@ func GenerateShortCode(text string) string{
 	return hex.EncodeToString(hash[:])[:8]
 }
 
-func GenerateShortUrl(url string, code string) string {
+func GenerateShortURL(url string, code string) string {
 	return "http://" + url + "/" + code
 }
