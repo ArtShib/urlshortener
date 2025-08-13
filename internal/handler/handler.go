@@ -23,11 +23,6 @@ func NewURLHandler(svc URLService) *URLHandler {
 }
 
 func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
 	
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -42,20 +37,15 @@ func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(201)
+	
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Length", strconv.Itoa(len(shortURL)))
+	w.WriteHeader(201)
 
 	w.Write([]byte(shortURL))
-
 }
 
 func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
 
 	shortCode := r.URL.Path[1:]
 	if shortCode == "" {
