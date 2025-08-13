@@ -1,15 +1,20 @@
 package shortener
 
 import (
-	"crypto/md5"
-	"encoding/hex"
+	"crypto/rand"
+	"encoding/base64"
 )
 
-func GenerateShortCode(text string) string{
-	hash := md5.Sum([]byte(text))
-	return hex.EncodeToString(hash[:])[:8]
+func GenerateShortCode() (string, error) {
+	len := 8
+	bytes := make([]byte, len)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes)[:len], nil	
 }
 
 func GenerateShortURL(url string, code string) string {
-	return "http://" + url + "/" + code
+	return url + "/" + code
 }
