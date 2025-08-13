@@ -14,10 +14,10 @@ type URLRepository interface {
 
 type URLService struct{
 	repo URLRepository
-	config *model.HTTPServerConfig
+	config *model.ShortServiceConfig
 }
 
-func NewURLService(repo URLRepository, cfg *model.HTTPServerConfig) *URLService {
+func NewURLService(repo URLRepository, cfg *model.ShortServiceConfig) *URLService {
 	return &URLService{
 		repo: repo,
 		config: cfg,
@@ -25,11 +25,14 @@ func NewURLService(repo URLRepository, cfg *model.HTTPServerConfig) *URLService 
 }
 
 func (s *URLService) Shorten(url string) (string, error) {
-	if (url == "") {
+	if url == "" {
 		return "", errors.New("empty URL")
 	}
-	shortCode := shortener.GenerateShortCode(url)
-	shortURL := s.config.Port 
+	shortCode, err := shortener.GenerateShortCode()
+	if err != nil {
+		return "", err
+	}
+	shortURL := s.config.ShortURL 
 	urlModel := &model.URL{
 		LongURL: url,
 		ShortCode: shortCode,
@@ -43,7 +46,7 @@ func (s *URLService) Shorten(url string) (string, error) {
 }
 
 func (s *URLService) GetID(shortCode string) (string, error) {
-	if (shortCode == "") {
+	if shortCode == "" {
 		return "", errors.New("empty short code")
 	}
 
