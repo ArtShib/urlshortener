@@ -1,8 +1,8 @@
 package main
 
 import (
+	"log"
 	"net/http"
-	"strings"
 
 	"github.com/ArtShib/urlshortener/internal/config"
 	"github.com/ArtShib/urlshortener/internal/repository"
@@ -11,13 +11,10 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	cfg := config.MustLoadConfig()
 	repo := repository.NewRepository()
-	svc := service.NewURLService(repo, cfg.HTTPServer)
+	svc := service.NewURLService(repo, cfg.ShortService)
 	router := router.NewRouter(svc)
 
-	err := http.ListenAndServe(strings.Replace(cfg.HTTPServer.Port, "::", ":", -1), router)	
-	if err != nil{
-		panic(err)
-	}
+	log.Fatal(http.ListenAndServe(cfg.HTTPServer.Port, router))	
 }
