@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 )
 
-func GenerateShortCode() (string, error) {
+func GenerateUUID() (string, error) {
 	len := 8
 	bytes := make([]byte, len)
 	_, err := rand.Read(bytes)
