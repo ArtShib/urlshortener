@@ -62,7 +62,7 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *URLHandler) ShortenJson(w http.ResponseWriter, r *http.Request) {
+func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 	
 	var req *model.RequestShortener
 
