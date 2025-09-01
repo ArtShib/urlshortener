@@ -25,7 +25,7 @@ func(s * URLServiceTest) GetID(shortCode string) (string, error) {
 	return s.GetIDfunc(shortCode)
 }
 
-func(s *URLServiceTest) ShortenJson(url string) (*model.ResponseShortener, error) {
+func(s *URLServiceTest) ShortenJSON(url string) (*model.ResponseShortener, error) {
 	return s.ShortenJsonfunc(url)
 } 
 
