@@ -16,22 +16,21 @@ import (
 
 func main() {
 	cfg := config.MustLoadConfig()
+	
 	logg := logger.NewLogger()
 	repo, _ := repository.NewRepository(cfg.RepoConfig.FileStoragePath)
 	defer func(){
-		if err := repo.SavingRepository(cfg.RepoConfig.FileStoragePath); err != nil {
-			logg.Error(err.Error())
-		}
+		log.Fatal(repo.SavingRepository(cfg.RepoConfig.FileStoragePath))
 	}()
-	
+
 	svc := service.NewURLService(repo, cfg.ShortService)
 	router := handler.NewRouter(svc, logg)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(cfg.HTTPServer.ServerAddress, router))	
+		log.Fatal(http.ListenAndServe(cfg.HTTPServer.ServerAddress, router))
 	}()
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGKILL,)
 	<-sigChan
 }
