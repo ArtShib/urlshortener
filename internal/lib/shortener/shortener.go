@@ -15,6 +15,6 @@ func GenerateShortCode() (string, error) {
 	return base64.URLEncoding.EncodeToString(bytes)[:len], nil	
 }
 
-func GenerateShortURL(url string, code string) string {
-	return url + "/" + code
+func GenerateShortURL(url string, uuid string) string {
+	return url + "/" + uuid
 }
