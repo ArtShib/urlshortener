@@ -4,8 +4,8 @@ import (
 	"flag"
 
 	"github.com/ArtShib/urlshortener/internal/model"
-	"github.com/caarlos0/env"
-	"github.com/joho/godotenv"
+	// "github.com/caarlos0/env"
+	// "github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -14,21 +14,21 @@ type Config struct {
 	RepoConfig *model.RepositoryConfig
 } 
 
-func (c *Config) LoadConfigEnv() error {
-	if err := godotenv.Load(); err != nil {
-		return err
-	}
-	if err := env.Parse(c.HTTPServer); err != nil {
-		return err
-	}
-	if err := env.Parse(c.ShortService); err != nil {
-		return err
-	}
-	if err := env.Parse(c.RepoConfig); err != nil {
-		return err
-	}			
-	return nil
-}
+// func (c *Config) LoadConfigEnv() error {
+// 	if err := godotenv.Load(); err != nil {
+// 		return err
+// 	}
+// 	if err := env.Parse(c.HTTPServer); err != nil {
+// 		return err
+// 	}
+// 	if err := env.Parse(c.ShortService); err != nil {
+// 		return err
+// 	}
+// 	if err := env.Parse(c.RepoConfig); err != nil {
+// 		return err
+// 	}			
+// 	return nil
+// }
 func (c *Config) LoadConfigFlag() {
 	if c.HTTPServer.ServerAddress == "" {
 		flag.StringVar(&c.HTTPServer.ServerAddress, "a", ":8080", "HTTP server startup address")
@@ -48,7 +48,7 @@ func MustLoadConfig() *Config {
 		ShortService: &model.ShortServiceConfig{},
 		RepoConfig: &model.RepositoryConfig{},
 	}
-	cfg.LoadConfigEnv()
+	// cfg.LoadConfigEnv()
 	cfg.LoadConfigFlag()
 	return &cfg
 }
