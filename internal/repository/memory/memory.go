@@ -49,7 +49,7 @@ func (r *MemoryRepository) FindByShortCode(uuid string) (*model.URL, error) {
 }
 
 func (r *MemoryRepository) LoadingRepository(fileName string) error {
-	
+	fileName = fileName + "/storage.json"
 	info, err := os.Stat(fileName) 
 	if os.IsNotExist(err) {
 		return err //stat test3.json: no such file or directory
@@ -72,6 +72,7 @@ func (r *MemoryRepository) LoadingRepository(fileName string) error {
 }
 func (r *MemoryRepository) SavingRepository(fileName string) error {
 
+	fileName = fileName + "/storage.json"
 	if len(r.listURLs) == 0 {
 		return errors.New("listURLs is empty")
 	}
