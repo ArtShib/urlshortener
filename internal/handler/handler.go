@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/ArtShib/urlshortener/internal/model"
 )
 
 
@@ -48,14 +51,40 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	longURL, err := h.service.GetID(shortCode) 
+	originalURL, err := h.service.GetID(shortCode) 
 	
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
-	w.Header().Set("Location", longURL)
+	w.Header().Set("Location", originalURL)
 	w.WriteHeader(307)
 
+}
+
+func (h *URLHandler) ShortenJson(w http.ResponseWriter, r *http.Request) {
+	
+	var req *model.RequestShortener
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+
+	if err := decoder.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	responseShortener, err := h.service.ShortenJson(req.URL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(responseShortener); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
