@@ -58,7 +58,7 @@ func (s *URLService) GetID(shortCode string) (string, error) {
 	return url.OriginalURL, nil
 }
 
-func (s *URLService) ShortenJson(url string) (*model.ResponseShortener, error) {
+func (s *URLService) ShortenJSON(url string) (*model.ResponseShortener, error) {
 	if url == "" {
 		return nil, errors.New("empty URL")
 	}
