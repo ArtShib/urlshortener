@@ -19,7 +19,7 @@ func main() {
 	cfg := config.MustLoadConfig()
 	repo, _ := repository.NewRepository(cfg.RepoConfig.FileStoragePath)
 	defer func(){
-		if err := repo.SavingRepository("/Users/shibakin-av/IdeaProjects/go/urlshortener/storage/storage3.json"); err != nil {
+		if err := repo.SavingRepository("github.com/ArtShib/urlshortener/storage/storage.json"); err != nil {
 			fmt.Println(err)
 		}
 	}()
