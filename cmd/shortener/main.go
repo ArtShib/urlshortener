@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,15 +16,16 @@ import (
 
 func main() {
 	cfg := config.MustLoadConfig()
+	logg := logger.NewLogger()
 	repo, _ := repository.NewRepository(cfg.RepoConfig.FileStoragePath)
 	defer func(){
 		if err := repo.SavingRepository(cfg.RepoConfig.FileStoragePath); err != nil {
-			fmt.Println(err)
+			logg.Error(err.Error())
 		}
 	}()
 	
 	svc := service.NewURLService(repo, cfg.ShortService)
-	router := handler.NewRouter(svc, logger.NewLogger())
+	router := handler.NewRouter(svc, logg)
 
 	go func() {
 		log.Fatal(http.ListenAndServe(cfg.HTTPServer.ServerAddress, router))	
