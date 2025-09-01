@@ -74,7 +74,7 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseShortener, err := h.service.ShortenJson(req.URL)
+	responseShortener, err := h.service.ShortenJSON(req.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
