@@ -81,4 +81,3 @@ func (s *URLService) ShortenJson(url string) (*model.ResponseShortener, error) {
 		Result: urlModel.ShortURL,
 	}, nil
 }
-
