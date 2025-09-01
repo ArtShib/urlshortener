@@ -5,12 +5,15 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/ArtShib/urlshortener/internal/model"
 )
 
 
 type URLServiceTest struct {
 	Shortenfunc func(url string) (string, error)
 	GetIDfunc func(shortCode string) (string, error)
+	ShortenJsonfunc func(url string) (*model.ResponseShortener, error)
 }
 
 
@@ -21,6 +24,10 @@ func(s *URLServiceTest) Shorten(url string) (string, error) {
 func(s * URLServiceTest) GetID(shortCode string) (string, error) {
 	return s.GetIDfunc(shortCode)
 }
+
+func(s *URLServiceTest) ShortenJson(url string) (*model.ResponseShortener, error) {
+	return s.ShortenJsonfunc(url)
+} 
 
 func TestUrlHandler_Shorten(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
