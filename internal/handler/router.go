@@ -22,7 +22,7 @@ func NewRouter(svc URLService, log *slog.Logger) http.Handler {
 
 	handler := NewURLHandler(svc)
 	mux.Post("/", handler.Shorten)
-	mux.Post("/api/shorten", handler.ShortenJson)
+	mux.Post("/api/shorten", handler.ShortenJSON)
 	mux.Get("/{shortCode}",  handler.GetID)
 	
 	return mux
