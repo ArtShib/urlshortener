@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/ArtShib/urlshortener/internal/config"
 	"github.com/ArtShib/urlshortener/internal/handler"
@@ -19,18 +21,29 @@ func main() {
 	
 	logg := logger.NewLogger()
 	repo, _ := repository.NewRepository(cfg.RepoConfig.FileStoragePath)
-	defer repo.SavingRepository(cfg.RepoConfig.FileStoragePath)
 
 	svc := service.NewURLService(repo, cfg.ShortService)
 	router := handler.NewRouter(svc, logg)
+	
+	server := &http.Server{
+		Addr: cfg.HTTPServer.ServerAddress,
+		Handler: router,
+	}
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 
+	
 	go func() {
-		log.Fatal(http.ListenAndServe(cfg.HTTPServer.ServerAddress, router))
+		log.Fatal(server.ListenAndServe())
 	}()
 	
-	<-sigChan
+	<-quit
 	
+	ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cansel()
+	
+	repo.SavingRepository(cfg.RepoConfig.FileStoragePath)
+	
+	server.Shutdown(ctx)
 }
