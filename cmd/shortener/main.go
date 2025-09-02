@@ -27,7 +27,7 @@ func main() {
 	router := handler.NewRouter(svc, logg)
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGKILL)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		log.Fatal(http.ListenAndServe(cfg.HTTPServer.ServerAddress, router))
