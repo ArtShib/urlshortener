@@ -78,6 +78,10 @@ func (r *MemoryRepository) SavingRepository(fileName string) error {
 	}
 
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE| os.O_TRUNC, 0777)
+	if err != nil {
+		return err
+	}
+	
 	defer func() error{
 		if err := file.Close(); err != nil {
 			return err
@@ -85,9 +89,6 @@ func (r *MemoryRepository) SavingRepository(fileName string) error {
 		return nil
 	}()
 
-	if err != nil {
-		return nil
-	}
 	urls := make([]*model.URL, 0, len(r.listURLs))
 	for _, v := range r.listURLs {
 		urls = append(urls, v)
