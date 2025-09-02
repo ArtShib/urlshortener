@@ -26,7 +26,8 @@ func (c *Config) LoadConfigEnv() error {
 	}
 	if err := env.Parse(c.RepoConfig); err != nil {
 		return err
-	}			
+	}
+	c.RepoConfig.FileStoragePath = os.Getenv("FILE_STORAGE_PATH")
 	return nil
 }
 func (c *Config) LoadConfigFlag() {
