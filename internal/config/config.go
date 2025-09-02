@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"os"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/caarlos0/env"
