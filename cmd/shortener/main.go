@@ -19,9 +19,7 @@ func main() {
 	
 	logg := logger.NewLogger()
 	repo, _ := repository.NewRepository(cfg.RepoConfig.FileStoragePath)
-	defer func(){
-		log.Fatal(repo.SavingRepository(cfg.RepoConfig.FileStoragePath))
-	}()
+	defer repo.SavingRepository(cfg.RepoConfig.FileStoragePath)
 
 	svc := service.NewURLService(repo, cfg.ShortService)
 	router := handler.NewRouter(svc, logg)
