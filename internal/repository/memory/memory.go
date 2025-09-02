@@ -49,9 +49,10 @@ func (r *MemoryRepository) FindByShortCode(uuid string) (*model.URL, error) {
 }
 
 func (r *MemoryRepository) LoadingRepository(fileName string) error {
+	
 	info, err := os.Stat(fileName) 
 	if os.IsNotExist(err) {
-		return err //stat test3.json: no such file or directory
+		return err 
 	}
 	if info.Size() == 0{
 		return errors.New("file is empty")
@@ -60,15 +61,31 @@ func (r *MemoryRepository) LoadingRepository(fileName string) error {
 	if err != nil {
 		return err
 	}
-	var urls []model.URL
-	if err := json.Unmarshal(data, &urls); err != nil {
+	
+	urls, err := r.unmarshalURL(data)	
+	if err != nil {
 		return err
 	}
-	for _, url := range urls {
-		r.Store(&url)
-	} 
+
+	r.loadData(urls)
+
 	return nil
 }
+
+func (r *MemoryRepository) unmarshalURL(data []byte) ([]*model.URL, error) {
+	var urls []*model.URL
+	if err := json.Unmarshal(data, &urls); err != nil {
+		return nil, err
+	}
+	return urls, nil
+}
+
+func (r *MemoryRepository) loadData(urls []*model.URL) {
+	for _, url := range urls {
+		r.Store(url)
+	} 
+}
+
 func (r *MemoryRepository) SavingRepository(fileName string) error {
 
 	if len(r.listURLs) == 0 {
