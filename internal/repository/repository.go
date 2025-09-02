@@ -7,8 +7,10 @@ import (
 
 type URLRepository interface {
 	Store(url *model.URL) error
-	FindByShortCode(shortCode string) (*model.URL, error)
+	FindByShortCode(uuid string) (*model.URL, error)
+	SavingRepository(fileName string) error 
 }
-func NewRepository() URLRepository{
-	return memory.NewMemoryRepository()
+func NewRepository(fileName string) (URLRepository, error) {
+	repo, err := memory.NewMemoryRepository(fileName)
+	return repo, err
 }

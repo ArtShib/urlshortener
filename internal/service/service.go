@@ -28,15 +28,15 @@ func (s *URLService) Shorten(url string) (string, error) {
 	if url == "" {
 		return "", errors.New("empty URL")
 	}
-	shortCode, err := shortener.GenerateShortCode()
+	uuid, err := shortener.GenerateUUID()
 	if err != nil {
 		return "", err
 	}
-	shortURL := s.config.ShortURL 
+	shortURL := s.config.BaseURL 
 	urlModel := &model.URL{
-		LongURL: url,
-		ShortCode: shortCode,
-		ShortURL: shortener.GenerateShortURL(shortURL, shortCode),
+		UUID: uuid,
+		ShortURL: shortener.GenerateShortURL(shortURL, uuid),
+		OriginalURL: url,
 	}
 
 	if err := s.repo.Store(urlModel); err != nil {
@@ -55,6 +55,29 @@ func (s *URLService) GetID(shortCode string) (string, error) {
 		return "", err
 	}
 
-	return url.LongURL, nil
+	return url.OriginalURL, nil
 }
 
+func (s *URLService) ShortenJSON(url string) (*model.ResponseShortener, error) {
+	if url == "" {
+		return nil, errors.New("empty URL")
+	}
+	uuid, err := shortener.GenerateUUID()
+	if err != nil {
+		return nil, err
+	}
+	shortURL := s.config.BaseURL 
+	urlModel := &model.URL{
+		UUID: uuid,
+		ShortURL: shortener.GenerateShortURL(shortURL, uuid),
+		OriginalURL: url,
+	}
+
+	if err := s.repo.Store(urlModel); err != nil {
+		return nil, err
+	}
+
+	return &model.ResponseShortener{
+		Result: urlModel.ShortURL,
+	}, nil
+}

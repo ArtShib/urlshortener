@@ -1,20 +1,23 @@
 package main
 
 import (
-	"log"
-	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/ArtShib/urlshortener/internal/app"
 	"github.com/ArtShib/urlshortener/internal/config"
-	"github.com/ArtShib/urlshortener/internal/handler"
-	"github.com/ArtShib/urlshortener/internal/repository"
-	"github.com/ArtShib/urlshortener/internal/service"
 )
 
 func main() {
 	cfg := config.MustLoadConfig()
-	repo := repository.NewRepository()
-	svc := service.NewURLService(repo, cfg.ShortService)
-	router := handler.NewRouter(svc)
+	app, _ := app.NewApp(cfg)
+	
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+	go app.Run()
 
-	log.Fatal(http.ListenAndServe(cfg.HTTPServer.Port, router))	
+	<-quit
+	
+	app.Stop()
 }
