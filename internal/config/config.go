@@ -27,8 +27,7 @@ func (c *Config) LoadConfigEnv() error {
 	}
 	if err := env.Parse(c.RepoConfig); err != nil {
 		return err
-	}
-	c.RepoConfig.FileStoragePath = os.Getenv("FILE_STORAGE_PATH")
+	}		
 	return nil
 }
 func (c *Config) LoadConfigFlag() {
@@ -39,7 +38,7 @@ func (c *Config) LoadConfigFlag() {
 		flag.StringVar(&c.ShortService.BaseURL, "b", "http://localhost:8080", "Address of the resulting shortened URL")
 	}
 	if c.RepoConfig.FileStoragePath == "" {
-		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "/tmp/storage.json", "File storage path")
+		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "/Users/shibakin-av/IdeaProjects/go/urlshortener/storage/test22.json", "File storage path")
 	}
 	flag.Parse()
 }
@@ -48,7 +47,9 @@ func MustLoadConfig() *Config {
 	cfg := Config{
 		HTTPServer: &model.HTTPServerConfig{},
 		ShortService: &model.ShortServiceConfig{},
-		RepoConfig: &model.RepositoryConfig{},
+		RepoConfig: &model.RepositoryConfig{
+			FileStoragePath: os.Getenv("FILE_STORAGE_PATH"),
+		},
 	}
 	cfg.LoadConfigEnv()
 	cfg.LoadConfigFlag()
