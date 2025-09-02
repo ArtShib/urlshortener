@@ -38,7 +38,7 @@ func (c *Config) LoadConfigFlag() {
 		flag.StringVar(&c.ShortService.BaseURL, "b", "http://localhost:8080", "Address of the resulting shortened URL")
 	}
 	if c.RepoConfig.FileStoragePath == "" {
-		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "/Users/shibakin-av/IdeaProjects/go/urlshortener/storage/test22.json", "File storage path")
+		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "/urlshortener/storage/storage.json", "File storage path")
 	}
 	flag.Parse()
 }
