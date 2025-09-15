@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -49,10 +48,8 @@ func NewApp(cfg *config.Config) (*App, error) {
 func (a *App) Run() {
 	go func() {
 		if err := a.Server.ListenAndServe(); err != nil {
-			fmt.Println(err)
-			os.Exit(2)
+			a.Logger.Error(err.Error())
 		}
-		
 	}()
 }
 
