@@ -19,5 +19,5 @@ func main() {
 
 	<-quit
 	
-	app.Stop()
+	//app.Stop()
 }
