@@ -40,9 +40,6 @@ func (c *Config) LoadConfigFlag() {
 	if c.RepoConfig.FileStoragePath == "" {
 		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "/Users/shibakin-av/IdeaProjects/go/urlshortener/storage/test22.json", "File storage path")
 	}
-	if c.RepoConfig.DatabaseDSN == "" {
-		flag.StringVar(&c.RepoConfig.DatabaseDSN, "d", "", "DataBase connection string")
-	}
 	flag.Parse()
 }
 
@@ -52,7 +49,6 @@ func MustLoadConfig() *Config {
 		ShortService: &model.ShortServiceConfig{},
 		RepoConfig: &model.RepositoryConfig{
 			FileStoragePath: os.Getenv("FILE_STORAGE_PATH"),
-			DatabaseDSN: os.Getenv("DATABASE_DSN"),
 		},
 	}
 	cfg.LoadConfigEnv()
