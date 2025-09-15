@@ -11,7 +11,7 @@ import (
 
 
 func NewRouter(svc URLService, log *slog.Logger) http.Handler {
-	//mux := http.NewServeMux()
+
 	mux := chi.NewRouter()
 
 	mux.Use(middleware.RequestID)
@@ -24,6 +24,9 @@ func NewRouter(svc URLService, log *slog.Logger) http.Handler {
 	mux.Post("/", handler.Shorten)
 	mux.Post("/api/shorten", handler.ShortenJSON)
 	mux.Get("/{shortCode}",  handler.GetID)
+	mux.Get("/ping", handler.Ping)
+	mux.Post("/api/shorten/batch", handler.ShortenJSONBatch)
 	
 	return mux
 }
+
