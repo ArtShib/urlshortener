@@ -28,7 +28,13 @@ func NewApp(cfg *config.Config) (*App, error) {
 	}
 	app.Logger = logger.NewLogger()
 	var err error
-	app.Repository, err = repository.NewRepository(cfg.RepoConfig.FileStoragePath)
+	ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cansel()
+	if cfg.RepoConfig.DatabaseDSN != "" {
+		app.Repository, err = repository.NewRepository(ctx, "db", cfg.RepoConfig.DatabaseDSN)
+	}else{
+		app.Repository, err = repository.NewRepository(ctx, "file", cfg.RepoConfig.FileStoragePath)
+	}
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err 
 	} 
@@ -53,7 +59,7 @@ func (a *App) Run() {
 func (a *App) Stop(){
 	ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cansel()
-	a.Repository.SavingRepository(a.Config.RepoConfig.FileStoragePath)
-	
+	a.Repository.Close()
+
 	a.Server.Shutdown(ctx)
 }
