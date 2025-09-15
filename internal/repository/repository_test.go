@@ -1,13 +1,17 @@
 package repository
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRepo(t *testing.T) {
+	ctx, cansel := context.WithTimeout(context.TODO(), 20 * time.Second)
+	defer cansel()
 	tests := []struct{
 		name string
 		url model.URL
@@ -24,12 +28,12 @@ func TestRepo(t *testing.T) {
 	}
 	for _, test := range tests{
 		t.Run(test.name, func(t *testing.T){
-			repo, _ := NewRepository("test.json")
-			err := repo.Store(&test.url)
+			repo, _ := NewRepository(ctx, "file", "test.json")
+			_, err := repo.Save(ctx, &test.url)
 			if err != nil{
 				assert.Errorf(t,err, "Error add")
 			}
-			url, err := repo.FindByShortCode(test.url.UUID)
+			url, err := repo.Get(ctx, test.url.UUID)
 			if err != nil{
 				assert.Errorf(t,err, "longUrl is not found")
 			}	
