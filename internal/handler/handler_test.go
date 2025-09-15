@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,8 +14,6 @@ type URLServiceTest struct {
 	Shortenfunc func(url string) (string, error)
 	GetIDfunc func(shortCode string) (string, error)
 	ShortenJsonfunc func(url string) (*model.ResponseShortener, error)
-	Pingfunc func(ctx context.Context) (error)
-	ShortenJSONBatchfunc func(urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) 
 }
 
 
@@ -30,15 +27,7 @@ func(s * URLServiceTest) GetID(shortCode string) (string, error) {
 
 func(s *URLServiceTest) ShortenJSON(url string) (*model.ResponseShortener, error) {
 	return s.ShortenJsonfunc(url)
-}
-
-func(s *URLServiceTest) Ping(ctx context.Context) error {
-	return nil
-}
-
-func(s *URLServiceTest) ShortenJSONBatch(urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
-	return nil, nil
-}
+} 
 
 func TestUrlHandler_Shorten(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
