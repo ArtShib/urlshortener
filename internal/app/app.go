@@ -57,9 +57,9 @@ func (a *App) Run() {
 }
 
 func (a *App) Stop(){
-	ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cansel()
+	// ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cansel()
 	a.Repository.Close()
 
-	a.Server.Shutdown(ctx)
+	// a.Server.Shutdown(ctx)
 }
