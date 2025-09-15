@@ -14,10 +14,10 @@ func main() {
 	app, _ := app.NewApp(cfg)
 	
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGKILL)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 	go app.Run()
 
 	<-quit
 	
-	//app.Stop()
+	app.Stop()
 }
