@@ -21,11 +21,10 @@ type URLRepository interface {
 func NewRepository(ctx context.Context, repoType string, dsnORpath string) (URLRepository, error) {
 	switch repoType {
 	case "db":
-		return postgres.NewPostgresRepository(ctx, dsnORpath), nil
+		return postgres.NewPostgresRepository(ctx, dsnORpath)
 	case "file":
 		return memory.NewMemoryRepository(ctx, dsnORpath)
 	}
 	log.Fatal("not loaded repo")
 	return nil, nil
 }
-
