@@ -6,7 +6,6 @@ import (
 	"errors"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 )
@@ -18,14 +17,12 @@ type MemoryRepository struct{
 }
 
 func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepository, error){
-	inctx, cansel := context.WithTimeout(ctx, 10 * time.Second)
-	defer cansel()
 
 	repo := &MemoryRepository{
 		listURLs: make(map[string]*model.URL),
 		fileName: fileName,
 	}
-	if err := repo.LoadingRepository(inctx); err != nil {
+	if err := repo.LoadingRepository(ctx); err != nil {
 		return repo, err
 	}
 	return repo, nil
