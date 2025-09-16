@@ -3,37 +3,28 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"log"
-	"time"
 
 	"github.com/ArtShib/urlshortener/internal/model"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type PostgresRepository struct {
-	// url *model.URL
 	db *sql.DB
 }
 
-func NewPostgresRepository(ctx context.Context, connectionString string) *PostgresRepository {
+func NewPostgresRepository(ctx context.Context, connectionString string) (*PostgresRepository, error) {
 	var err error
 	pg := &PostgresRepository{}
-	
-	inctx, cansel := context.WithTimeout(ctx, 10 * time.Second)
-	defer cansel()
 
 	pg.db, err = sql.Open("pgx", connectionString)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
-	if err := pg.Ping(inctx); err != nil {
-		log.Fatal(err.Error())	
+	if err := pg.Ping(ctx); err != nil {
+		return nil, err	
 	}
-	pg.LoadingRepository(inctx)
-	return pg
+	pg.LoadingRepository(ctx)
+	return pg, nil
 }
 
 func (p PostgresRepository) Ping(ctx context.Context) error {
@@ -50,20 +41,25 @@ func (p *PostgresRepository) Close() error {
 }
 
 func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error) {
-	insertSQL := `INSERT INTO a_url_short (uuid, short_url, original_url) VALUES ($1, $2, $3)`
-	if _, err := p.db.Exec(insertSQL, url.UUID, url.ShortURL, url.OriginalURL); err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			errSelect := p.db.QueryRowContext(ctx, 
-				"select uuid, short_url from a_url_short WHERE original_url = $1",
-				url.OriginalURL,
-			).Scan(&url.UUID, &url.ShortURL)
-			if errSelect != nil {
-				return nil, errSelect
-			}
-			return url, model.ErrURLConflict
-		}
+	var isConflict bool
+	insertSQL :=  `WITH inserted AS (
+						INSERT INTO a_url_short (uuid, short_url, original_url)
+						VALUES ($1, $2, $3)
+						ON CONFLICT (original_url) DO NOTHING
+						RETURNING *
+					)
+					select uuid, short_url, false as is_conflict FROM inserted
+					UNION
+					SELECT uuid, short_url, true as is_conflict FROM a_url_short 
+					WHERE original_url = $3 AND NOT EXISTS (SELECT 1 FROM inserted)`
+	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL).
+			Scan(&url.UUID, &url.ShortURL, &isConflict)
+
+	if err != nil {
 		return nil, err
+	}
+	if isConflict {
+		return url, model.ErrURLConflict 
 	}
 	return url, nil
 }
@@ -79,7 +75,12 @@ func (p *PostgresRepository) Get(ctx context.Context, uuid string) (*model.URL, 
 }
 
 func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
-	createTable := `CREATE TABLE IF NOT EXISTS a_url_short (id SERIAL PRIMARY KEY,uuid text not null,short_url text not null,original_url text UNIQUE not null);CREATE index IF NOT EXISTS idx_short_url_uuid ON a_url_short(uuid);`
+	createTable := `CREATE TABLE IF NOT EXISTS a_url_short (
+						id SERIAL PRIMARY KEY,
+						uuid text not null,
+						short_url text not null,
+						original_url text UNIQUE not null);
+					CREATE index IF NOT EXISTS idx_short_url_uuid ON a_url_short(uuid);`
 	if _ , err := p.db.ExecContext(ctx, createTable); err != nil {
 		return err
 	}
