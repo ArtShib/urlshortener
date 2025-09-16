@@ -10,8 +10,8 @@ import (
 )
 
 func TestRepo(t *testing.T) {
-	ctx, cansel := context.WithTimeout(context.TODO(), 20 * time.Second)
-	defer cansel()
+	ctx, cancel := context.WithTimeout(context.TODO(), 20 * time.Second)
+	defer cancel()
 	tests := []struct{
 		name string
 		url model.URL
