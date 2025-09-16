@@ -11,6 +11,10 @@ import (
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
+const (
+    defaultRequestTimeout = 3 * time.Second
+    longOperationTimeout  = 10 * time.Second
+)
 
 type URLHandler struct{
 	service URLService
@@ -24,6 +28,9 @@ func NewURLHandler(svc URLService) *URLHandler {
 
 func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 	
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	
@@ -32,7 +39,7 @@ func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := h.service.Shorten(string(body))
+	shortURL, err := h.service.Shorten(ctx, string(body))
 	if err != nil && err != model.ErrURLConflict {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,13 +59,16 @@ func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+	
 	shortCode := r.URL.Path[1:]
 	if shortCode == "" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	originalURL, err := h.service.GetID(shortCode) 
+	originalURL, err := h.service.GetID(ctx, shortCode) 
 	
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -71,6 +81,9 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 	
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
 	var req *model.RequestShortener
 
 	decoder := json.NewDecoder(r.Body)
@@ -81,7 +94,7 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseShortener, err := h.service.ShortenJSON(req.URL)
+	responseShortener, err := h.service.ShortenJSON(ctx, req.URL)
 	if err != nil && err != model.ErrURLConflict {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -101,9 +114,9 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *URLHandler) Ping(w http.ResponseWriter, r *http.Request) {
-	cxt, cansel := context.WithTimeout(r.Context(), 10 * time.Second)
-	defer cansel()
-	if err := h.service.Ping(cxt); err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), defaultRequestTimeout)
+	defer cancel()
+	if err := h.service.Ping(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)	
 		return
 	}
@@ -112,6 +125,9 @@ func (h *URLHandler) Ping(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 	
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
 	var req model.RequestShortenerBatchArray
 
 	decoder := json.NewDecoder(r.Body)
@@ -122,7 +138,7 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseShortener, err := h.service.ShortenJSONBatch(req)
+	responseShortener, err := h.service.ShortenJSONBatch(ctx, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
