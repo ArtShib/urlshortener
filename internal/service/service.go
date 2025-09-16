@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
 	"github.com/ArtShib/urlshortener/internal/model"
@@ -27,9 +26,8 @@ func NewURLService(repo URLRepository, cfg *model.ShortServiceConfig) *URLServic
 	}
 }
 
-func (s *URLService) Shorten(url string) (string, error) {
-	ctx, cansel := context.WithTimeout(context.Background(), 10 * time.Second)
-	defer cansel()
+func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
+
 	if url == "" {
 		return "", errors.New("empty URL")
 	}
@@ -43,18 +41,12 @@ func (s *URLService) Shorten(url string) (string, error) {
 		ShortURL: shortener.GenerateShortURL(shortURL, uuid),
 		OriginalURL: url,
 	}
-
-	// if urlModel, err = s.repo.Save(ctx, urlModel); err != nil {
-	// 	return urlModel.ShortURL, err
-	// }
 	
 	urlModel, err = s.repo.Save(ctx, urlModel)
 	return urlModel.ShortURL, err
 }
 
-func (s *URLService) GetID(shortCode string) (string, error) {
-	ctx, cansel := context.WithTimeout(context.Background(), 10 * time.Second)
-	defer cansel()
+func (s *URLService) GetID(ctx context.Context, shortCode string) (string, error) {
 
 	if shortCode == "" {
 		return "", errors.New("empty short code")
@@ -68,9 +60,7 @@ func (s *URLService) GetID(shortCode string) (string, error) {
 	return url.OriginalURL, nil
 }
 
-func (s *URLService) ShortenJSON(url string) (*model.ResponseShortener, error) {
-	ctx, cansel := context.WithTimeout(context.Background(), 10 * time.Second)
-	defer cansel()
+func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
 
 	if url == "" {
 		return nil, errors.New("empty URL")
@@ -86,12 +76,6 @@ func (s *URLService) ShortenJSON(url string) (*model.ResponseShortener, error) {
 		OriginalURL: url,
 	}
 
-	// if urlModel, err = s.repo.Save(ctx, urlModel); err != nil {
-	// 	return &model.ResponseShortener{
-	// 		Result: urlModel.ShortURL,
-	// 	}, err
-	// }
-
 	urlModel, err = s.repo.Save(ctx, urlModel)
 
 	return &model.ResponseShortener{
@@ -104,9 +88,7 @@ func (s *URLService) Ping(ctx context.Context) error {
 	return s.repo.Ping(ctx)
 }
 
-func (s *URLService) ShortenJSONBatch(urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
-	ctx, cansel := context.WithTimeout(context.Background(), 10 * time.Second)
-	defer cansel()
+func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
 
 	var shortenerBatch model.ResponseShortenerBatchArray
 
