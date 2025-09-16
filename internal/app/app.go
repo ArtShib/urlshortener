@@ -4,8 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/ArtShib/urlshortener/internal/config"
 	"github.com/ArtShib/urlshortener/internal/handler"
@@ -21,28 +19,18 @@ type App struct {
 	Server	*http.Server
 	Config *config.Config
 }
-func NewApp(cfg *config.Config) (*App, error) {
+func NewApp(cfg *config.Config, repo *repository.URLRepository) *App {
 	app := &App{
 		Config: cfg,
+		Repository: *repo,
 	}
 	app.Logger = logger.NewLogger()
-	var err error
-	ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cansel()
-	if cfg.RepoConfig.DatabaseDSN != "" {
-		app.Repository, err = repository.NewRepository(ctx, "db", cfg.RepoConfig.DatabaseDSN)
-	}else{
-		app.Repository, err = repository.NewRepository(ctx, "file", cfg.RepoConfig.FileStoragePath)
-	}
-	if err != nil && !os.IsNotExist(err) {
-		return nil, err 
-	} 
 	svc := service.NewURLService(app.Repository, cfg.ShortService)
 	app.Server =  &http.Server{
 				Addr: app.Config.HTTPServer.ServerAddress,
 				Handler: handler.NewRouter(svc, app.Logger),
 			} 
-	return app, nil
+	return app
 }
 
 func (a *App) Run() {
@@ -50,13 +38,11 @@ func (a *App) Run() {
 		if err := a.Server.ListenAndServe(); err != nil {
 			a.Logger.Error(err.Error())
 		}
+		
 	}()
 }
 
-func (a *App) Stop(){
-	ctx, cansel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cansel()
+func (a *App) Stop(ctx context.Context){
 	a.Repository.Close()
-
 	a.Server.Shutdown(ctx)
 }
