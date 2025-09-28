@@ -1,14 +1,20 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
+const (
+    defaultRequestTimeout = 3 * time.Second
+    longOperationTimeout  = 10 * time.Second
+)
 
 type URLHandler struct{
 	service URLService
@@ -22,6 +28,9 @@ func NewURLHandler(svc URLService) *URLHandler {
 
 func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 	
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	
@@ -30,28 +39,36 @@ func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := h.service.Shorten(string(body))
-	if err != nil {
+	shortURL, err := h.service.Shorten(ctx, string(body))
+	if err != nil && err != model.ErrURLConflict {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Length", strconv.Itoa(len(shortURL)))
-	w.WriteHeader(201)
+	
+	if err == model.ErrURLConflict {
+		w.WriteHeader(http.StatusConflict)
+	}else{
+		w.WriteHeader(201)
+	}
 
 	w.Write([]byte(shortURL))
 }
 
 func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+	
 	shortCode := r.URL.Path[1:]
 	if shortCode == "" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	originalURL, err := h.service.GetID(shortCode) 
+	originalURL, err := h.service.GetID(ctx, shortCode) 
 	
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -64,6 +81,9 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 	
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
 	var req *model.RequestShortener
 
 	decoder := json.NewDecoder(r.Body)
@@ -74,7 +94,51 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseShortener, err := h.service.ShortenJSON(req.URL)
+	responseShortener, err := h.service.ShortenJSON(ctx, req.URL)
+	if err != nil && err != model.ErrURLConflict {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	if err == model.ErrURLConflict {
+		w.WriteHeader(http.StatusConflict)
+	}else{
+		w.WriteHeader(201)
+	}
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(responseShortener); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *URLHandler) Ping(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), defaultRequestTimeout)
+	defer cancel()
+	if err := h.service.Ping(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)	
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
+	
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
+	var req model.RequestShortenerBatchArray
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+
+	if err := decoder.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	responseShortener, err := h.service.ShortenJSONBatch(ctx, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

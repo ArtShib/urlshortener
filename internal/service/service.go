@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
@@ -8,8 +9,9 @@ import (
 )
 
 type URLRepository interface {
-	Store(url *model.URL) error
-	FindByShortCode(shortCode string) (*model.URL, error)
+	Save(ctx context.Context, url *model.URL)  (*model.URL, error)
+	Get(ctx context.Context, shortCode string) (*model.URL, error)
+	Ping(ctx context.Context) error
 }
 
 type URLService struct{
@@ -24,7 +26,8 @@ func NewURLService(repo URLRepository, cfg *model.ShortServiceConfig) *URLServic
 	}
 }
 
-func (s *URLService) Shorten(url string) (string, error) {
+func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
+
 	if url == "" {
 		return "", errors.New("empty URL")
 	}
@@ -38,19 +41,18 @@ func (s *URLService) Shorten(url string) (string, error) {
 		ShortURL: shortener.GenerateShortURL(shortURL, uuid),
 		OriginalURL: url,
 	}
-
-	if err := s.repo.Store(urlModel); err != nil {
-		return "", err
-	}
-	return urlModel.ShortURL, nil
+	
+	urlModel, err = s.repo.Save(ctx, urlModel)
+	return urlModel.ShortURL, err
 }
 
-func (s *URLService) GetID(shortCode string) (string, error) {
+func (s *URLService) GetID(ctx context.Context, shortCode string) (string, error) {
+
 	if shortCode == "" {
 		return "", errors.New("empty short code")
 	}
 
-	url, err := s.repo.FindByShortCode(shortCode)
+	url, err := s.repo.Get(ctx, shortCode)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +60,8 @@ func (s *URLService) GetID(shortCode string) (string, error) {
 	return url.OriginalURL, nil
 }
 
-func (s *URLService) ShortenJSON(url string) (*model.ResponseShortener, error) {
+func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
+
 	if url == "" {
 		return nil, errors.New("empty URL")
 	}
@@ -73,11 +76,41 @@ func (s *URLService) ShortenJSON(url string) (*model.ResponseShortener, error) {
 		OriginalURL: url,
 	}
 
-	if err := s.repo.Store(urlModel); err != nil {
-		return nil, err
-	}
+	urlModel, err = s.repo.Save(ctx, urlModel)
 
 	return &model.ResponseShortener{
 		Result: urlModel.ShortURL,
-	}, nil
+	}, err
+
+}
+
+func (s *URLService) Ping(ctx context.Context) error {
+	return s.repo.Ping(ctx)
+}
+
+func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
+
+	var shortenerBatch model.ResponseShortenerBatchArray
+
+	for _, url := range urls {
+		uuid, err := shortener.GenerateUUID()
+		if err != nil {
+			return nil, err
+		}
+		shortURL := s.config.BaseURL 
+		urlModel := &model.URL{
+			UUID: uuid,
+			ShortURL: shortener.GenerateShortURL(shortURL, uuid),
+			OriginalURL: url.OriginalURL,
+		}
+		
+		if _, err := s.repo.Save(ctx, urlModel); err != nil {
+			return nil, err
+		}
+		shortenerBatch = append(shortenerBatch, model.ResponseShortenerBatch{
+			CorrelationID: url.CorrelationID,
+			ShortURL: urlModel.ShortURL,
+		})	
+	}
+	return shortenerBatch, nil
 }

@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -12,30 +13,33 @@ import (
 type MemoryRepository struct{
 	listURLs map[string] *model.URL
 	mu sync.RWMutex
+	fileName string	
 }
 
-func NewMemoryRepository(fileName string) (*MemoryRepository, error){
+func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepository, error){
+
 	repo := &MemoryRepository{
 		listURLs: make(map[string]*model.URL),
+		fileName: fileName,
 	}
-	if err := repo.LoadingRepository(fileName); err != nil {
+	if err := repo.LoadingRepository(ctx); err != nil {
 		return repo, err
 	}
 	return repo, nil
 }
 
-func (r *MemoryRepository) Store(url *model.URL) error{
+func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error){
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, ok := r.listURLs[url.UUID]
 	if ok {
-		return errors.New("link already exists")
+		return nil, model.ErrURLConflict
 	}
 	r.listURLs[url.UUID] = url
-	return nil
+	return url, nil
 }
 
-func (r *MemoryRepository) FindByShortCode(uuid string) (*model.URL, error) {
+func (r *MemoryRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	
@@ -48,16 +52,16 @@ func (r *MemoryRepository) FindByShortCode(uuid string) (*model.URL, error) {
 	return url, nil
 }
 
-func (r *MemoryRepository) LoadingRepository(fileName string) error {
+func (r *MemoryRepository) LoadingRepository(ctx context.Context) error {
 	
-	info, err := os.Stat(fileName) 
+	info, err := os.Stat(r.fileName) 
 	if os.IsNotExist(err) {
 		return err 
 	}
 	if info.Size() == 0{
 		return errors.New("file is empty")
 	}
-	data, err := os.ReadFile(fileName)
+	data, err := os.ReadFile(r.fileName)
 	if err != nil {
 		return err
 	}
@@ -67,7 +71,7 @@ func (r *MemoryRepository) LoadingRepository(fileName string) error {
 		return err
 	}
 
-	r.loadData(urls)
+	r.loadData(ctx, urls)
 
 	return nil
 }
@@ -80,23 +84,22 @@ func (r *MemoryRepository) unmarshalURL(data []byte) ([]*model.URL, error) {
 	return urls, nil
 }
 
-func (r *MemoryRepository) loadData(urls []*model.URL) {
+func (r *MemoryRepository) loadData(ctx context.Context, urls []*model.URL) {
 	for _, url := range urls {
-		r.Store(url)
+		r.Save(ctx, url)
 	} 
 }
 
-func (r *MemoryRepository) SavingRepository(fileName string) error {
+func (r *MemoryRepository) Close() error {
 
 	if len(r.listURLs) == 0 {
 		return errors.New("listURLs is empty")
 	}
 
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE| os.O_TRUNC, 0777)
+	file, err := os.OpenFile(r.fileName, os.O_WRONLY|os.O_CREATE| os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-	
 	defer func() error{
 		if err := file.Close(); err != nil {
 			return err
@@ -113,8 +116,18 @@ func (r *MemoryRepository) SavingRepository(fileName string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := file.Write(data); err != nil {
+	_, err = file.Write(data) 
+	if err != nil {
 		return err
+	}
+	return nil
+}
+
+
+func (r *MemoryRepository) Ping(ctx context.Context) error {
+	_, err := os.Stat(r.fileName) 
+	if os.IsNotExist(err) {
+		return err 
 	}
 	return nil
 }

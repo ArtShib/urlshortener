@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,31 +12,41 @@ import (
 
 
 type URLServiceTest struct {
-	Shortenfunc func(url string) (string, error)
-	GetIDfunc func(shortCode string) (string, error)
-	ShortenJsonfunc func(url string) (*model.ResponseShortener, error)
+	Shortenfunc func(ctx context.Context, url string) (string, error)
+	GetIDfunc func(ctx context.Context, shortCode string) (string, error)
+	ShortenJsonfunc func(ctx context.Context, url string) (*model.ResponseShortener, error)
+	Pingfunc func(ctx context.Context) (error)
+	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) 
 }
 
 
-func(s *URLServiceTest) Shorten(url string) (string, error) {
-	return s.Shortenfunc(url)
+func(s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error) {
+	return s.Shortenfunc(ctx, url)
 } 
 
-func(s * URLServiceTest) GetID(shortCode string) (string, error) {
-	return s.GetIDfunc(shortCode)
+func(s * URLServiceTest) GetID(ctx context.Context, shortCode string) (string, error) {
+	return s.GetIDfunc(ctx, shortCode)
 }
 
-func(s *URLServiceTest) ShortenJSON(url string) (*model.ResponseShortener, error) {
-	return s.ShortenJsonfunc(url)
-} 
+func(s *URLServiceTest) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
+	return s.ShortenJsonfunc(ctx, url)
+}
+
+func(s *URLServiceTest) Ping(ctx context.Context) error {
+	return nil
+}
+
+func(s *URLServiceTest) ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
+	return nil, nil
+}
 
 func TestUrlHandler_Shorten(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
-		Shortenfunc: func(url string) (string, error) {
+		Shortenfunc: func(ctx context.Context, url string) (string, error) {
 			return "sedczfrH", nil
 		},
 	}
-	
+
 	handler := NewURLHandler(urlServiceTest)
 
 	bodyReq := strings.NewReader(`https://yandex.ru`)
@@ -53,7 +64,7 @@ func TestUrlHandler_Shorten(t *testing.T) {
 
 func TestURLHandler_GetID(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
-		GetIDfunc: func(url string) (string, error) {
+		GetIDfunc: func(ctx context.Context, url string) (string, error) {
 			return "sedczfrH", nil
 		},
 	}
