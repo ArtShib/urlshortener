@@ -12,11 +12,11 @@ import (
 )
 
 const (
-    defaultRequestTimeout = 3 * time.Second
-    longOperationTimeout  = 10 * time.Second
+	defaultRequestTimeout = 3 * time.Second
+	longOperationTimeout  = 10 * time.Second
 )
 
-type URLHandler struct{
+type URLHandler struct {
 	service URLService
 }
 
@@ -27,30 +27,27 @@ func NewURLHandler(svc URLService) *URLHandler {
 }
 
 func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
-	
-	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
-	defer cancel()
 
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
-	
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	shortURL, err := h.service.Shorten(ctx, string(body))
+	shortURL, err := h.service.Shorten(r.Context(), string(body))
 	if err != nil && err != model.ErrURLConflict {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Length", strconv.Itoa(len(shortURL)))
-	
+
 	if err == model.ErrURLConflict {
 		w.WriteHeader(http.StatusConflict)
-	}else{
+	} else {
 		w.WriteHeader(201)
 	}
 
@@ -61,15 +58,15 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
-	
+
 	shortCode := r.URL.Path[1:]
 	if shortCode == "" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	originalURL, err := h.service.GetID(ctx, shortCode) 
-	
+	originalURL, err := h.service.GetID(ctx, shortCode)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -80,7 +77,7 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
-	
+
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
@@ -99,11 +96,11 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err == model.ErrURLConflict {
 		w.WriteHeader(http.StatusConflict)
-	}else{
+	} else {
 		w.WriteHeader(201)
 	}
 	encoder := json.NewEncoder(w)
@@ -117,14 +114,14 @@ func (h *URLHandler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), defaultRequestTimeout)
 	defer cancel()
 	if err := h.service.Ping(ctx); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)	
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
-	
+
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
@@ -143,7 +140,7 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
 	encoder := json.NewEncoder(w)

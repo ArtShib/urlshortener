@@ -21,7 +21,7 @@ func NewPostgresRepository(ctx context.Context, connectionString string) (*Postg
 		return nil, err
 	}
 	if err := pg.Ping(ctx); err != nil {
-		return nil, err	
+		return nil, err
 	}
 	pg.LoadingRepository(ctx)
 	return pg, nil
@@ -42,9 +42,9 @@ func (p *PostgresRepository) Close() error {
 
 func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error) {
 	var isConflict bool
-	insertSQL :=  `WITH inserted AS (
-						INSERT INTO a_url_short (uuid, short_url, original_url)
-						VALUES ($1, $2, $3)
+	insertSQL := `WITH inserted AS (
+						INSERT INTO a_url_short (uuid, short_url, original_url, user_id)
+						VALUES ($1, $2, $3, $3)
 						ON CONFLICT (original_url) DO NOTHING
 						RETURNING *
 					)
@@ -52,14 +52,14 @@ func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.U
 					UNION
 					SELECT uuid, short_url, true as is_conflict FROM a_url_short 
 					WHERE original_url = $3 AND NOT EXISTS (SELECT 1 FROM inserted)`
-	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL).
-			Scan(&url.UUID, &url.ShortURL, &isConflict)
+	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL, url.UserID).
+		Scan(&url.UUID, &url.ShortURL, &isConflict)
 
 	if err != nil {
 		return nil, err
 	}
 	if isConflict {
-		return url, model.ErrURLConflict 
+		return url, model.ErrURLConflict
 	}
 	return url, nil
 }
@@ -79,9 +79,10 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 						id SERIAL PRIMARY KEY,
 						uuid text not null,
 						short_url text not null,
-						original_url text UNIQUE not null);
+						original_url text UNIQUE not null,
+						user_id text default null);
 					CREATE index IF NOT EXISTS idx_short_url_uuid ON a_url_short(uuid);`
-	if _ , err := p.db.ExecContext(ctx, createTable); err != nil {
+	if _, err := p.db.ExecContext(ctx, createTable); err != nil {
 		return err
 	}
 	return nil
