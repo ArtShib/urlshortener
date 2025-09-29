@@ -32,13 +32,25 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 			}
 
 			if !auth.ValidateToken(c.Value) {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
+				userId, err := auth.GenerateUserID()
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				token := auth.CreateToken(userId)
+				http.SetCookie(w, &http.Cookie{
+					Name:  "User",
+					Value: token,
+				})
+				ctx := context.WithValue(r.Context(), "UserIDKey", userId)
+				r = r.WithContext(ctx)
+				//w.WriteHeader(http.StatusUnauthorized)
+				//return
 			}
 
-			userId := auth.GetUserID(c.Value)
-			ctx := context.WithValue(r.Context(), "UserIDKey", userId)
-			r = r.WithContext(ctx)
+			//userId := auth.GetUserID(c.Value)
+			//ctx := context.WithValue(r.Context(), "UserIDKey", userId)
+			//r = r.WithContext(ctx)
 
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			next.ServeHTTP(ww, r)
