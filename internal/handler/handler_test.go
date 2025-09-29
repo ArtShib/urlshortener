@@ -10,33 +10,36 @@ import (
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
-
 type URLServiceTest struct {
-	Shortenfunc func(ctx context.Context, url string) (string, error)
-	GetIDfunc func(ctx context.Context, shortCode string) (string, error)
-	ShortenJsonfunc func(ctx context.Context, url string) (*model.ResponseShortener, error)
-	Pingfunc func(ctx context.Context) (error)
-	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) 
+	Shortenfunc          func(ctx context.Context, url string) (string, error)
+	GetIDfunc            func(ctx context.Context, shortCode string) (string, error)
+	ShortenJsonfunc      func(ctx context.Context, url string) (*model.ResponseShortener, error)
+	Pingfunc             func(ctx context.Context) error
+	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
+	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request)
 }
 
-
-func(s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error) {
+func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error) {
 	return s.Shortenfunc(ctx, url)
-} 
+}
 
-func(s * URLServiceTest) GetID(ctx context.Context, shortCode string) (string, error) {
+func (s *URLServiceTest) GetID(ctx context.Context, shortCode string) (string, error) {
 	return s.GetIDfunc(ctx, shortCode)
 }
 
-func(s *URLServiceTest) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
+func (s *URLServiceTest) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
 	return s.ShortenJsonfunc(ctx, url)
 }
 
-func(s *URLServiceTest) Ping(ctx context.Context) error {
+func (s *URLServiceTest) Ping(ctx context.Context) error {
 	return nil
 }
 
-func(s *URLServiceTest) ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
+func (s *URLServiceTest) ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
+	return nil, nil
+}
+
+func (s *URLServiceTest) GetJSONBatch(ctx context.Context, userID string) (*model.URLUserBatch, error) {
 	return nil, nil
 }
 
@@ -59,7 +62,7 @@ func TestUrlHandler_Shorten(t *testing.T) {
 
 	if resp.StatusCode != http.StatusCreated {
 		t.Errorf("Status %d expected, status %d received", http.StatusCreated, resp.StatusCode)
-	}	
+	}
 }
 
 func TestURLHandler_GetID(t *testing.T) {
@@ -68,7 +71,7 @@ func TestURLHandler_GetID(t *testing.T) {
 			return "sedczfrH", nil
 		},
 	}
-	
+
 	handler := NewURLHandler(urlServiceTest)
 
 	req := httptest.NewRequest("GET", "/e9db20b2", nil)
@@ -80,5 +83,5 @@ func TestURLHandler_GetID(t *testing.T) {
 
 	if resp.StatusCode != http.StatusTemporaryRedirect {
 		t.Errorf("Status %d expected, status %d received", http.StatusTemporaryRedirect, resp.StatusCode)
-	}	
+	}
 }
