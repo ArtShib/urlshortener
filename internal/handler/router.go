@@ -13,7 +13,7 @@ import (
 func NewRouter(svc URLService, log *slog.Logger, auth *auth.AuthService) http.Handler {
 
 	mux := chi.NewRouter()
-	mux.Use(customMiddleware.Auth(auth))
+	//mux.Use(customMiddleware.Auth(auth))
 	mux.Use(middleware.RequestID)
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
