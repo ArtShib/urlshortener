@@ -27,6 +27,7 @@ func NewRouter(svc URLService, log *slog.Logger, auth *auth.AuthService) http.Ha
 	mux.Get("/{shortCode}", handler.GetID)
 	mux.Get("/ping", handler.Ping)
 	mux.Post("/api/shorten/batch", handler.ShortenJSONBatch)
+	mux.Get(" /api/user/urls", handler.Ping)
 
 	return mux
 }

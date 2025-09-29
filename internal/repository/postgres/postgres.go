@@ -87,3 +87,23 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (p *PostgresRepository) GetBatch(ctx context.Context, userId string) (*model.URLUserBatch, error) {
+	query := `select short_url, original_url from a_url_short where user_id = $1 `
+	rows, err := p.db.QueryContext(ctx, query, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var urls model.URLUserBatch
+	for rows.Next() {
+		var url model.URLUser
+		if err := rows.Scan(&url.ShortURL, &url.OriginalURL); err != nil {
+			return nil, err
+		}
+		urls = append(urls, url)
+	}
+
+	return &urls, nil
+}

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -145,6 +146,33 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(responseShortener); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value("UserIDKey").(string)
+	if !ok {
+		fmt.Errorf("No UserID in context")
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
+	urlsBatch, err := h.service.GetJSONBatch(ctx, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if urlsBatch == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(urlsBatch); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

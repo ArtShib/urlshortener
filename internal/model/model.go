@@ -10,6 +10,7 @@ type URL struct {
 	OriginalURL string `json:"original_url"`
 	UserID      string `json:"user_id"`
 }
+type URLArray []URL
 
 type HTTPServerConfig struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
@@ -47,3 +48,9 @@ type ResponseShortenerBatch struct {
 }
 
 var ErrURLConflict = errors.New("URL already exists")
+
+type URLUser struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+type URLUserBatch []URLUser

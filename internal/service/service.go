@@ -19,6 +19,7 @@ type URLRepository interface {
 	Save(ctx context.Context, url *model.URL) (*model.URL, error)
 	Get(ctx context.Context, shortCode string) (*model.URL, error)
 	Ping(ctx context.Context) error
+	GetBatch(ctx context.Context, userId string) (*model.URLUserBatch, error)
 }
 
 type URLService struct {
@@ -131,4 +132,13 @@ func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestSho
 		})
 	}
 	return shortenerBatch, nil
+}
+
+func (s *URLService) GetJSONBatch(ctx context.Context, userID string) (*model.URLUserBatch, error) {
+
+	UURLUserBatch, err := s.repo.GetBatch(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return UURLUserBatch, nil
 }
