@@ -41,11 +41,11 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 				Name:  "User",
 				Value: token,
 			})
-			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			ctx := context.WithValue(r.Context(), userIDKey, userID)
-			//r = r.WithContext(ctx)
+			r = r.WithContext(ctx)
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
-			next.ServeHTTP(ww, r.WithContext(ctx))
+			next.ServeHTTP(ww, r)
 		})
 	}
 }
