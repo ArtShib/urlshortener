@@ -151,17 +151,18 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
-	type contextKey string
-	const userIDKey contextKey = "userID"
-	userID, ok := r.Context().Value(userIDKey).(string)
-	if !ok {
-		//http.Error(w, "Not found", http.StatusNotFound)
-		//return
-		////fmt.Printf("Unauthorized")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
+	//type contextKey string
+	//const userIDKey contextKey = "userID"
+	//userID, ok := r.Context().Value(userIDKey).(string)
+	//if !ok || userID == "" {
+	//	//http.Error(w, "Not found", http.StatusNotFound)
+	//	//return
+	//	////fmt.Printf("Unauthorized")
+	//	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	//	return
+	//}
+	c, _ := r.Cookie("User")
+	userID := c.Value
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
