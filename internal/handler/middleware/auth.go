@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
+	"github.com/go-chi/chi/middleware"
 )
 
 func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
@@ -42,7 +43,8 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 			})
 			ctx := context.WithValue(r.Context(), userIDKey, userID)
 			//r = r.WithContext(ctx)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			next.ServeHTTP(ww, r.WithContext(ctx))
 		})
 	}
 }
