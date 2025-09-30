@@ -152,13 +152,13 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 
-	userID, _ := r.Context().Value("UserID").(string)
-	if userID == "" {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-		//fmt.Printf("Unauthorized")
-		//http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	userID, ok := r.Context().Value("UserID").(string)
+	if !ok && userID == "" {
+		//http.Error(w, "Not found", http.StatusNotFound)
 		//return
+		////fmt.Printf("Unauthorized")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
