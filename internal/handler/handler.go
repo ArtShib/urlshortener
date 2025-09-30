@@ -170,7 +170,7 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
+	w.WriteHeader(http.StatusOK)
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(urlsBatch); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
