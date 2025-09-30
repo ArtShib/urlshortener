@@ -13,13 +13,12 @@ import (
 func NewRouter(svc URLService, log *slog.Logger, auth *auth.AuthService) http.Handler {
 
 	mux := chi.NewRouter()
-
+	mux.Use(customMiddleware.Auth(auth))
 	mux.Use(middleware.RequestID)
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
 	mux.Use(customMiddleware.New(log))
 	mux.Use(customMiddleware.GzipMiddleware)
-	mux.Use(customMiddleware.Auth(auth))
 
 	handler := NewURLHandler(svc)
 	mux.Post("/", handler.Shorten)
