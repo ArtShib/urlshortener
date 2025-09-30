@@ -168,7 +168,7 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if len(urlsBatch) == 0 {
-		w.WriteHeader(http.StatusNoContent)
+		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
