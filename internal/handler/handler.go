@@ -167,7 +167,7 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	if urlsBatch == nil {
+	if len(urlsBatch) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}

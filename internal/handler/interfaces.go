@@ -12,5 +12,5 @@ type URLService interface {
 	ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error)
 	Ping(ctx context.Context) error
 	ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
-	GetJSONBatch(ctx context.Context, userID string) (*model.URLUserBatch, error)
+	GetJSONBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 }
