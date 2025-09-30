@@ -11,6 +11,8 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var userID string
+			type contextKey string
+			const userIDKey contextKey = "userID"
 			c, err := r.Cookie("token")
 			if err != nil {
 				userID, err = auth.GenerateUserID()
@@ -37,7 +39,7 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 				Name:  "User",
 				Value: token,
 			})
-			ctx := context.WithValue(r.Context(), "userID", userID)
+			ctx := context.WithValue(r.Context(), userIDKey, userID)
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})
