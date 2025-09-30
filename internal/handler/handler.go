@@ -152,9 +152,8 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
-	type contextKey string
-	const userIDKey contextKey = "userID"
-	userID, ok := r.Context().Value(userIDKey).(string)
+
+	userID, ok := r.Context().Value(model.UserIDKey).(string)
 	if !ok || userID == "" {
 		//http.Error(w, "Not found", http.StatusNotFound)
 		//return

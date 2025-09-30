@@ -54,3 +54,9 @@ type URLUser struct {
 	OriginalURL string `json:"original_url"`
 }
 type URLUserBatch []URLUser
+
+type contextKey string
+
+const (
+	UserIDKey contextKey = "userID"
+)

@@ -51,7 +51,7 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 		OriginalURL: url,
 	}
 
-	if userID, ok := ctx.Value("UserID").(string); ok && userID != "" {
+	if userID, ok := ctx.Value(model.UserIDKey).(string); ok && userID != "" {
 		urlModel.UserID = userID
 	} else {
 		fmt.Errorf("No UserID in context")
