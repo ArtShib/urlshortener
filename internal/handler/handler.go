@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -153,9 +152,9 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("UserIDKey").(string)
-	if !ok {
-		fmt.Errorf("No UserID in context")
+	userID, ok := r.Context().Value("UserID").(string)
+	if !ok && userID == "" {
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)

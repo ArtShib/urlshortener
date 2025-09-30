@@ -94,6 +94,9 @@ func (p *PostgresRepository) GetBatch(ctx context.Context, userId string) (*mode
 	if err != nil {
 		return nil, err
 	}
+	if rows == nil {
+		return nil, nil
+	}
 	defer rows.Close()
 
 	var urls model.URLUserBatch
