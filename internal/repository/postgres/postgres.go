@@ -43,8 +43,8 @@ func (p *PostgresRepository) Close() error {
 func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error) {
 	var isConflict bool
 	insertSQL := `WITH inserted AS (
-						INSERT INTO a_url_short (uuid, short_url, original_url, user_id)
-						VALUES ($1, $2, $3, $3)
+						INSERT INTO a_url_short (uuid, short_url, original_url)
+						VALUES ($1, $2, $3)
 						ON CONFLICT (original_url) DO NOTHING
 						RETURNING *
 					)
@@ -52,7 +52,7 @@ func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.U
 					UNION
 					SELECT uuid, short_url, true as is_conflict FROM a_url_short 
 					WHERE original_url = $3 AND NOT EXISTS (SELECT 1 FROM inserted)`
-	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL, url.UserID).
+	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL).
 		Scan(&url.UUID, &url.ShortURL, &isConflict)
 
 	if err != nil {
