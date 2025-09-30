@@ -16,7 +16,7 @@ type URLServiceTest struct {
 	ShortenJsonfunc      func(ctx context.Context, url string) (*model.ResponseShortener, error)
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
-	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request)
+	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request) (model.URLUserBatch, error)
 }
 
 func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error) {
@@ -39,7 +39,7 @@ func (s *URLServiceTest) ShortenJSONBatch(ctx context.Context, urls model.Reques
 	return nil, nil
 }
 
-func (s *URLServiceTest) GetJSONBatch(ctx context.Context, userID string) (*model.URLUserBatch, error) {
+func (s *URLServiceTest) GetJSONBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
 	return nil, nil
 }
 
