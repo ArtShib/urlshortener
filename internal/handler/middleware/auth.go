@@ -33,11 +33,11 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 					return
 				}
 			}
-			//token := auth.CreateToken(userID)
+			token := auth.CreateToken(userID)
 
 			http.SetCookie(w, &http.Cookie{
 				Name:  "User",
-				Value: userID,
+				Value: token,
 			})
 			ctx := context.WithValue(r.Context(), userIDKey, userID)
 			//r = r.WithContext(ctx)
