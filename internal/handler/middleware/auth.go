@@ -26,6 +26,10 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 				}
 			} else {
 				userID = auth.GetUserID(c.Value)
+				if userID == "" {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 			}
 			token := auth.CreateToken(userID)
 
