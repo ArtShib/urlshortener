@@ -33,6 +33,7 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 					return
 				}
 			}
+			userID, err = auth.GenerateUserID()
 			token := auth.CreateToken(userID)
 
 			http.SetCookie(w, &http.Cookie{
