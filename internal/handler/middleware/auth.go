@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
@@ -36,7 +35,7 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 				}
 			}
 			token := auth.CreateToken(userID)
-			fmt.Printf(userID)
+
 			http.SetCookie(w, &http.Cookie{
 				Name:  "User",
 				Value: token,
