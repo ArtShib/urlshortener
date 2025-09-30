@@ -154,11 +154,11 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 
 	userID, _ := r.Context().Value("UserID").(string)
 	if userID == "" {
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-		//fmt.Printf("Unauthorized")
-		//http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		//http.Error(w, "Not found", http.StatusNotFound)
 		//return
+		//fmt.Printf("Unauthorized")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
@@ -169,7 +169,7 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if len(urlsBatch) == 0 {
-		http.Error(w, "Not found", http.StatusNotFound)
+		http.Error(w, "Not content", http.StatusNoContent)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
