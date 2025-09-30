@@ -159,8 +159,8 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 		//http.Error(w, "Not found", http.StatusNotFound)
 		//return
 		fmt.Printf("Unauthorized")
-		//http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		//return
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
