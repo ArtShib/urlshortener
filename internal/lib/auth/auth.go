@@ -38,7 +38,7 @@ func (a *AuthService) verifySignature(data string, sign []byte) bool {
 func (a *AuthService) CreateToken(userID string) string {
 	UserIDBytes, _ := hex.DecodeString(userID)
 	sign := a.signData(userID)
-	token := append(sign, UserIDBytes...)
+	token := append(UserIDBytes, sign...)
 	return hex.EncodeToString(token)
 }
 
