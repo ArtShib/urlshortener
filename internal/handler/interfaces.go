@@ -9,7 +9,7 @@ import (
 type URLService interface {
 	Shorten(ctx context.Context, url string) (string, error)
 	GetID(ctx context.Context, urlUser *model.GetURLUser) (string, error)
-	ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error)
+	ShortenJSON(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error)
 	Ping(ctx context.Context) error
 	ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
 	GetJSONBatch(ctx context.Context, userID string) (model.URLUserBatch, error)

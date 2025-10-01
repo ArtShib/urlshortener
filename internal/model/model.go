@@ -27,7 +27,8 @@ type RepositoryConfig struct {
 }
 
 type RequestShortener struct {
-	URL string `json:"url"`
+	URL    string `json:"url"`
+	UserID string
 }
 
 type ResponseShortener struct {

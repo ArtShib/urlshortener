@@ -90,6 +90,12 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 
+	userID, ok := r.Context().Value(model.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
@@ -102,8 +108,8 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	responseShortener, err := h.service.ShortenJSON(ctx, req.URL)
+	req.UserID = userID
+	responseShortener, err := h.service.ShortenJSON(ctx, req)
 	if err != nil && err != model.ErrURLConflict {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

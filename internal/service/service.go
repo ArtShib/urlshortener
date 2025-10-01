@@ -76,9 +76,9 @@ func (s *URLService) GetID(ctx context.Context, urlUser *model.GetURLUser) (stri
 	return url.OriginalURL, nil
 }
 
-func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
+func (s *URLService) ShortenJSON(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error) {
 
-	if url == "" {
+	if rSortener.URL == "" {
 		return nil, errors.New("empty URL")
 	}
 	uuid, err := shortener.GenerateUUID()
@@ -89,7 +89,8 @@ func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.Respon
 	urlModel := &model.URL{
 		UUID:        uuid,
 		ShortURL:    shortener.GenerateShortURL(shortURL, uuid),
-		OriginalURL: url,
+		OriginalURL: rSortener.URL,
+		UserID:      rSortener.UserID,
 	}
 
 	urlModel, err = s.repo.Save(ctx, urlModel)

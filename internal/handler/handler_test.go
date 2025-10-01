@@ -13,7 +13,7 @@ import (
 type URLServiceTest struct {
 	Shortenfunc          func(ctx context.Context, url string) (string, error)
 	GetIDfunc            func(ctx context.Context, urlUser *model.GetURLUser) (string, error)
-	ShortenJsonfunc      func(ctx context.Context, url string) (*model.ResponseShortener, error)
+	ShortenJsonfunc      func(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error)
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
 	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request) (model.URLUserBatch, error)
@@ -27,8 +27,8 @@ func (s *URLServiceTest) GetID(ctx context.Context, urlUser *model.GetURLUser) (
 	return s.GetIDfunc(ctx, urlUser)
 }
 
-func (s *URLServiceTest) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
-	return s.ShortenJsonfunc(ctx, url)
+func (s *URLServiceTest) ShortenJSON(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error) {
+	return s.ShortenJsonfunc(ctx, rSortener)
 }
 
 func (s *URLServiceTest) Ping(ctx context.Context) error {
