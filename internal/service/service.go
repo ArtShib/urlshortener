@@ -70,7 +70,8 @@ func (s *URLService) GetID(ctx context.Context, urlUser *model.GetURLUser) (stri
 	url, err := s.repo.Get(ctx, urlUser)
 	if err != nil {
 		return "", err
-	} else if url == nil {
+	}
+	if url == nil {
 		return "", nil
 	}
 	return url.OriginalURL, nil
