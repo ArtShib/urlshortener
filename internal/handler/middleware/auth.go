@@ -28,14 +28,15 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-			} else {
-				userID = auth.GetUserID(c.Value)
-				token = c.Value
-				if userID == "" {
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
-					return
-				}
 			}
+			//else {
+			//	//userID = auth.GetUserID(c.Value)
+			//	//token = c.Value
+			//	//if userID == "" {
+			//	//	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			//	//	return
+			//	//}
+			//}
 
 			http.SetCookie(w, &http.Cookie{
 				Name:  "User",
