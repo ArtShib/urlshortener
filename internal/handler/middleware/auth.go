@@ -25,6 +25,9 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
+				ctx := context.WithValue(r.Context(), model.UserIDKey, userID)
+				//r = r.WithContext(ctx)
+				next.ServeHTTP(w, r.WithContext(ctx))
 			}
 			//else if !auth.ValidateToken(cookie.Value) {
 			//	userID, err = auth.GenerateUserID()
