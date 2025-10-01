@@ -14,7 +14,7 @@ type URLRepository interface {
 	Get(ctx context.Context, uuid string) (*model.URL, error)
 	Close() error
 	Ping(context.Context) error
-	GetBatch(ctx context.Context, userId string) (model.URLUserBatch, error)
+	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 }
 
 func NewRepository(ctx context.Context, repoType string, dsnORpath string) (URLRepository, error) {

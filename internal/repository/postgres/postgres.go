@@ -88,9 +88,9 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 	return nil
 }
 
-func (p *PostgresRepository) GetBatch(ctx context.Context, userId string) (model.URLUserBatch, error) {
+func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
 	query := `select short_url, original_url from a_url_short where user_id = $1 `
-	rows, err := p.db.QueryContext(ctx, query, userId)
+	rows, err := p.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}

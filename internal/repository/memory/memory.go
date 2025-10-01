@@ -131,6 +131,6 @@ func (r *MemoryRepository) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (r *MemoryRepository) GetBatch(ctx context.Context, userId string) (model.URLUserBatch, error) {
+func (r *MemoryRepository) GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
 	return nil, nil
 }

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
@@ -11,15 +10,15 @@ import (
 )
 
 const (
-	defaultRequestTimeout = 3 * time.Second
-	longOperationTimeout  = 10 * time.Second
+	//defaultRequestTimeout = 3 * time.Second
+	longOperationTimeout = 10 * time.Second
 )
 
 type URLRepository interface {
 	Save(ctx context.Context, url *model.URL) (*model.URL, error)
 	Get(ctx context.Context, shortCode string) (*model.URL, error)
 	Ping(ctx context.Context) error
-	GetBatch(ctx context.Context, userId string) (model.URLUserBatch, error)
+	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 }
 
 type URLService struct {
@@ -51,10 +50,9 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 		OriginalURL: url,
 	}
 
-	if userID, ok := ctx.Value(model.UserIDKey).(string); ok && userID != "" {
+	userID, ok := ctx.Value(model.UserIDKey).(string)
+	if ok && userID != "" {
 		urlModel.UserID = userID
-	} else {
-		fmt.Errorf("No UserID in context")
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, longOperationTimeout)
