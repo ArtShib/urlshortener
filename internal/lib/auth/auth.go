@@ -44,8 +44,8 @@ func (a *AuthService) CreateToken(userID string) string {
 
 func (a *AuthService) ValidateToken(token string) bool {
 	tokenBytes, _ := hex.DecodeString(token)
-	userID := tokenBytes[:sha256.Size]
-	sign := tokenBytes[sha256.Size:]
+	userID := tokenBytes[:16]
+	sign := tokenBytes[16:]
 	expected := hex.EncodeToString(userID)
 
 	return a.verifySignature(expected, sign)
@@ -57,7 +57,7 @@ func (a *AuthService) ValidateToken(token string) bool {
 
 func (a AuthService) GetUserID(token string) string {
 	tokenBytes, _ := hex.DecodeString(token)
-	userID := tokenBytes[:sha256.Size]
+	userID := tokenBytes[:16]
 
 	return hex.EncodeToString(userID)
 }
