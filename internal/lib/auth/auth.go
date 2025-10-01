@@ -22,30 +22,33 @@ func (a AuthService) GenerateUserID() (string, error) {
 	}
 	return hex.EncodeToString(bytes), nil
 }
-func (a *AuthService) signData(data string) string {
+func (a *AuthService) signData(data string) []byte {
 	h := hmac.New(sha256.New, a.secret)
-	h.Write([]byte(data))
+	DataBytes, _ := hex.DecodeString(data)
+	h.Write(DataBytes)
 	sign := h.Sum(nil)
-	return hex.EncodeToString(sign)
+	return sign // hex.EncodeToString(sign)
 }
 
-func (a *AuthService) verifySignature(data string, sign string) bool {
+func (a *AuthService) verifySignature(data string, sign []byte) bool {
 	expected := a.signData(data)
-	return hmac.Equal([]byte(sign), []byte(expected))
+	return hmac.Equal(sign, expected)
 }
 
 func (a *AuthService) CreateToken(userID string) string {
+	UserIDBytes, _ := hex.DecodeString(userID)
 	sign := a.signData(userID)
-	token := sign + userID
-	return token
+	token := append(sign, UserIDBytes...)
+	return hex.EncodeToString(token)
 }
 
 func (a *AuthService) ValidateToken(token string) bool {
-	userID := token[:sha256.Size]
-	signToken := token[sha256.Size:]
-	sign := a.CreateToken(userID)
+	tokenBytes, _ := hex.DecodeString(token)
+	userID := tokenBytes[:sha256.Size]
+	sign := tokenBytes[sha256.Size:]
+	expected := hex.EncodeToString(userID)
 
-	return a.verifySignature(signToken, sign)
+	return a.verifySignature(expected, sign)
 }
 
 //func (a *AuthService) splitToken(token string) []string {
@@ -53,8 +56,8 @@ func (a *AuthService) ValidateToken(token string) bool {
 //}
 
 func (a AuthService) GetUserID(token string) string {
-	//parts := a.splitToken(token)
-	//return parts[0]
-	userID := token[:sha256.Size]
-	return userID
+	tokenBytes, _ := hex.DecodeString(token)
+	userID := tokenBytes[:sha256.Size]
+
+	return hex.EncodeToString(userID)
 }
