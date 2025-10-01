@@ -107,6 +107,8 @@ func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model
 		}
 		urls = append(urls, url)
 	}
-
+	if err := rows.Err(); err != nil {
+		return model.URLUserBatch{}, err
+	}
 	return urls, nil
 }
