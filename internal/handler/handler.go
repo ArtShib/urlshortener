@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -157,7 +156,7 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 	if !ok || userID == "" {
 		//http.Error(w, "Not found", http.StatusNotFound)
 		//return
-		fmt.Printf("Unauthorized")
+		//fmt.Printf("Unauthorized")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
