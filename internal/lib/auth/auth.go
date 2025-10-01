@@ -42,8 +42,10 @@ func (a *AuthService) CreateToken(userID string) string {
 
 func (a *AuthService) ValidateToken(token string) bool {
 	userID := token[:sha256.Size]
+	signToken := token[sha256.Size:]
 	sign := a.CreateToken(userID)
-	return a.verifySignature(token, sign)
+
+	return a.verifySignature(signToken, sign)
 }
 
 //func (a *AuthService) splitToken(token string) []string {
