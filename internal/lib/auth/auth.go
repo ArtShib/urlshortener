@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"strings"
 )
 
 type AuthService struct {
@@ -37,23 +36,23 @@ func (a *AuthService) verifySignature(data string, sign string) bool {
 
 func (a *AuthService) CreateToken(userID string) string {
 	sign := a.signData(userID)
-	return userID + ":" + sign
+	token := sign + userID
+	return token
 }
 
 func (a *AuthService) ValidateToken(token string) bool {
-	parts := a.splitToken(token)
-	if len(parts) != 2 {
-		return false
-	}
-	sign := parts[1]
+	userID := token[:sha256.Size]
+	sign := a.CreateToken(userID)
 	return a.verifySignature(token, sign)
 }
 
-func (a *AuthService) splitToken(token string) []string {
-	return strings.Split(token, ":")
-}
+//func (a *AuthService) splitToken(token string) []string {
+//	return strings.Split(token, ":")
+//}
 
 func (a AuthService) GetUserID(token string) string {
-	parts := a.splitToken(token)
-	return parts[0]
+	//parts := a.splitToken(token)
+	//return parts[0]
+	userID := token[:sha256.Size]
+	return userID
 }
