@@ -21,14 +21,17 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-			} else if !auth.ValidateToken(c.Value) {
-				userID, err = auth.GenerateUserID()
-				token = auth.CreateToken(userID)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
 			}
+			userID = auth.GetUserID(c.Value)
+			token = c.Value
+			//else if !auth.ValidateToken(c.Value) {
+			//	userID, err = auth.GenerateUserID()
+			//	token = auth.CreateToken(userID)
+			//	if err != nil {
+			//		http.Error(w, err.Error(), http.StatusInternalServerError)
+			//		return
+			//	}
+			//}
 			//else {
 			//	//userID = auth.GetUserID(c.Value)
 			//	//token = c.Value
