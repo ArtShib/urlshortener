@@ -16,7 +16,7 @@ const (
 
 type URLRepository interface {
 	Save(ctx context.Context, url *model.URL) (*model.URL, error)
-	Get(ctx context.Context, shortCode string) (*model.URL, error)
+	Get(ctx context.Context, user *model.GetURLUser) (*model.URL, error)
 	Ping(ctx context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 }
@@ -62,17 +62,17 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 	return urlModel.ShortURL, err
 }
 
-func (s *URLService) GetID(ctx context.Context, shortCode string) (string, error) {
+func (s *URLService) GetID(ctx context.Context, urlUser *model.GetURLUser) (string, error) {
 
-	if shortCode == "" {
-		return "", errors.New("empty short code")
-	}
-
-	url, err := s.repo.Get(ctx, shortCode)
+	//if shortCode == "" {
+	//	return "", errors.New("empty short code")
+	//}
+	url, err := s.repo.Get(ctx, urlUser)
 	if err != nil {
 		return "", err
+	} else if url == nil {
+		return "", nil
 	}
-
 	return url.OriginalURL, nil
 }
 

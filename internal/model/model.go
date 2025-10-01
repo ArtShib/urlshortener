@@ -61,3 +61,8 @@ type contextKey string
 const (
 	UserIDKey contextKey = "userID"
 )
+
+type GetURLUser struct {
+	UUID   string
+	UserID string
+}

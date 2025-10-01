@@ -64,9 +64,12 @@ func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.U
 	return url, nil
 }
 
-func (p *PostgresRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
-	query := `select uuid, short_url, original_url from a_url_short where uuid = $1 LIMIT 1`
-	row := p.db.QueryRowContext(ctx, query, uuid)
+func (p *PostgresRepository) Get(ctx context.Context, urlUser *model.GetURLUser) (*model.URL, error) {
+	query := `select uuid, short_url, original_url from a_url_short where uuid = $1 and short_url = $2  LIMIT 1`
+	row := p.db.QueryRowContext(ctx, query, urlUser.UUID, urlUser.UserID)
+	if row == nil {
+		return nil, nil
+	}
 	var url model.URL
 	if err := row.Scan(&url.UUID, &url.ShortURL, &url.OriginalURL); err != nil {
 		return nil, err

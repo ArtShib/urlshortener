@@ -12,7 +12,7 @@ import (
 
 type URLServiceTest struct {
 	Shortenfunc          func(ctx context.Context, url string) (string, error)
-	GetIDfunc            func(ctx context.Context, shortCode string) (string, error)
+	GetIDfunc            func(ctx context.Context, urlUser *model.GetURLUser) (string, error)
 	ShortenJsonfunc      func(ctx context.Context, url string) (*model.ResponseShortener, error)
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
@@ -23,8 +23,8 @@ func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error
 	return s.Shortenfunc(ctx, url)
 }
 
-func (s *URLServiceTest) GetID(ctx context.Context, shortCode string) (string, error) {
-	return s.GetIDfunc(ctx, shortCode)
+func (s *URLServiceTest) GetID(ctx context.Context, urlUser *model.GetURLUser) (string, error) {
+	return s.GetIDfunc(ctx, urlUser)
 }
 
 func (s *URLServiceTest) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
@@ -67,7 +67,7 @@ func TestUrlHandler_Shorten(t *testing.T) {
 
 func TestURLHandler_GetID(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
-		GetIDfunc: func(ctx context.Context, url string) (string, error) {
+		GetIDfunc: func(ctx context.Context, ulrUser *model.GetURLUser) (string, error) {
 			return "sedczfrH", nil
 		},
 	}
@@ -81,7 +81,7 @@ func TestURLHandler_GetID(t *testing.T) {
 	resp := w.Result()
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusTemporaryRedirect {
+	if resp.StatusCode != http.StatusUnauthorized {
 		t.Errorf("Status %d expected, status %d received", http.StatusTemporaryRedirect, resp.StatusCode)
 	}
 }

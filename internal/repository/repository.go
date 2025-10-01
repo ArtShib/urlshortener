@@ -11,7 +11,7 @@ import (
 
 type URLRepository interface {
 	Save(ctx context.Context, url *model.URL) (*model.URL, error)
-	Get(ctx context.Context, uuid string) (*model.URL, error)
+	Get(ctx context.Context, urlUser *model.GetURLUser) (*model.URL, error)
 	Close() error
 	Ping(context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)

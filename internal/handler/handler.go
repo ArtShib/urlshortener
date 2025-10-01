@@ -56,6 +56,12 @@ func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
 
 func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
+	userID, ok := r.Context().Value(model.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
@@ -64,16 +70,22 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
-
-	originalURL, err := h.service.GetID(ctx, shortCode)
+	urlUser := &model.GetURLUser{
+		UserID: userID,
+		UUID:   shortCode,
+	}
+	originalURL, err := h.service.GetID(ctx, urlUser)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if originalURL == "" {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
 	w.Header().Set("Location", originalURL)
 	w.WriteHeader(307)
-
 }
 
 func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
