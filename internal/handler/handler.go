@@ -154,9 +154,6 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := r.Context().Value(model.UserIDKey).(string)
 	if !ok || userID == "" {
-		//http.Error(w, "Not found", http.StatusNotFound)
-		//return
-		//fmt.Printf("Unauthorized")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -180,4 +177,22 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(model.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	_, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	//uuid = strings.Split(string(body), ",")
+	w.WriteHeader(http.StatusAccepted)
+
 }
