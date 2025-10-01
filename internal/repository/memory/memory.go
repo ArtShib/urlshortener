@@ -39,11 +39,11 @@ func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL
 	return url, nil
 }
 
-func (r *MemoryRepository) Get(ctx context.Context, urlUser *model.GetURLUser) (*model.URL, error) {
+func (r *MemoryRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	url, ok := r.listURLs[urlUser.UUID]
+	url, ok := r.listURLs[uuid]
 
 	if !ok {
 		return nil, errors.New("longUrl is not found")

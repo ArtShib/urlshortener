@@ -33,10 +33,7 @@ func TestRepo(t *testing.T) {
 			if err != nil {
 				assert.Errorf(t, err, "Error add")
 			}
-			userUrl := &model.GetURLUser{
-				UUID: test.url.UUID,
-			}
-			url, err := repo.Get(ctx, userUrl)
+			url, err := repo.Get(ctx, test.url.UUID)
 			if err != nil {
 				assert.Errorf(t, err, "longUrl is not found")
 			}

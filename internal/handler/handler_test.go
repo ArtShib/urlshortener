@@ -12,8 +12,8 @@ import (
 
 type URLServiceTest struct {
 	Shortenfunc          func(ctx context.Context, url string) (string, error)
-	GetIDfunc            func(ctx context.Context, urlUser *model.GetURLUser) (string, error)
-	ShortenJsonfunc      func(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error)
+	GetIDfunc            func(ctx context.Context, shortCode string) (string, error)
+	ShortenJsonfunc      func(ctx context.Context, url string) (*model.ResponseShortener, error)
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
 	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request) (model.URLUserBatch, error)
@@ -23,12 +23,12 @@ func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error
 	return s.Shortenfunc(ctx, url)
 }
 
-func (s *URLServiceTest) GetID(ctx context.Context, urlUser *model.GetURLUser) (string, error) {
-	return s.GetIDfunc(ctx, urlUser)
+func (s *URLServiceTest) GetID(ctx context.Context, shortCode string) (string, error) {
+	return s.GetIDfunc(ctx, shortCode)
 }
 
-func (s *URLServiceTest) ShortenJSON(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error) {
-	return s.ShortenJsonfunc(ctx, rSortener)
+func (s *URLServiceTest) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
+	return s.ShortenJsonfunc(ctx, url)
 }
 
 func (s *URLServiceTest) Ping(ctx context.Context) error {
@@ -67,7 +67,7 @@ func TestUrlHandler_Shorten(t *testing.T) {
 
 func TestURLHandler_GetID(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
-		GetIDfunc: func(ctx context.Context, ulrUser *model.GetURLUser) (string, error) {
+		GetIDfunc: func(ctx context.Context, url string) (string, error) {
 			return "sedczfrH", nil
 		},
 	}
@@ -81,7 +81,7 @@ func TestURLHandler_GetID(t *testing.T) {
 	resp := w.Result()
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusUnauthorized {
+	if resp.StatusCode != http.StatusTemporaryRedirect {
 		t.Errorf("Status %d expected, status %d received", http.StatusTemporaryRedirect, resp.StatusCode)
 	}
 }

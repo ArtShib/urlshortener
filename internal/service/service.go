@@ -16,7 +16,7 @@ const (
 
 type URLRepository interface {
 	Save(ctx context.Context, url *model.URL) (*model.URL, error)
-	Get(ctx context.Context, user *model.GetURLUser) (*model.URL, error)
+	Get(ctx context.Context, shortCode string) (*model.URL, error)
 	Ping(ctx context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 }
@@ -62,24 +62,23 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 	return urlModel.ShortURL, err
 }
 
-func (s *URLService) GetID(ctx context.Context, urlUser *model.GetURLUser) (string, error) {
+func (s *URLService) GetID(ctx context.Context, shortCode string) (string, error) {
 
-	//if shortCode == "" {
-	//	return "", errors.New("empty short code")
-	//}
-	url, err := s.repo.Get(ctx, urlUser)
+	if shortCode == "" {
+		return "", errors.New("empty short code")
+	}
+
+	url, err := s.repo.Get(ctx, shortCode)
 	if err != nil {
 		return "", err
 	}
-	if url == nil {
-		return "", nil
-	}
+
 	return url.OriginalURL, nil
 }
 
-func (s *URLService) ShortenJSON(ctx context.Context, rSortener *model.RequestShortener) (*model.ResponseShortener, error) {
+func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
 
-	if rSortener.URL == "" {
+	if url == "" {
 		return nil, errors.New("empty URL")
 	}
 	uuid, err := shortener.GenerateUUID()
@@ -90,8 +89,7 @@ func (s *URLService) ShortenJSON(ctx context.Context, rSortener *model.RequestSh
 	urlModel := &model.URL{
 		UUID:        uuid,
 		ShortURL:    shortener.GenerateShortURL(shortURL, uuid),
-		OriginalURL: rSortener.URL,
-		UserID:      rSortener.UserID,
+		OriginalURL: url,
 	}
 
 	urlModel, err = s.repo.Save(ctx, urlModel)
