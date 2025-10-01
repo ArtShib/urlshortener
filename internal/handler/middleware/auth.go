@@ -6,61 +6,46 @@ import (
 
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
 	"github.com/ArtShib/urlshortener/internal/model"
-	"github.com/go-chi/chi/middleware"
 )
 
 func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			var userID, token string
+			var userID string
 
-			_, err := r.Cookie("User")
+			cookie, err := r.Cookie("User")
 			if err != nil {
 				userID, err = auth.GenerateUserID()
-				token = auth.CreateToken(userID)
-				http.SetCookie(w, &http.Cookie{
-					Name:  "User",
-					Value: token,
-				})
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				ctx := context.WithValue(r.Context(), model.UserIDKey, userID)
-				r = r.WithContext(ctx)
-				ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-				next.ServeHTTP(ww, r)
-				return
+				http.SetCookie(w, addCookie(userID, auth))
+
+			} else if !auth.ValidateToken(cookie.Value) {
+				userID, err = auth.GenerateUserID()
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				http.SetCookie(w, addCookie(userID, auth))
+			} else {
+				userID = auth.GetUserID(cookie.Value)
+				if userID == "" {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 			}
-			//else if !auth.ValidateToken(cookie.Value) {
-			//	userID, err = auth.GenerateUserID()
-			//	token = auth.CreateToken(userID)
-			//	if err != nil {
-			//		http.Error(w, err.Error(), http.StatusInternalServerError)
-			//		return
-			//	}
-			//} else {
-			//	userID = auth.GetUserID(cookie.Value)
-			//	token = cookie.Value
-			//	if userID == "" {
-			//		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			//		return
-			//	}
-			//}
-			//log.Fatal("EEEEEEEEEEEEEEEEEEEE", cookie.Value)
-			//userID = auth.GetUserID(cookie.Value)
-			//if userID == "" {
-			//	http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			//	return
-			//}
-			//token = cookie.Value
-			//http.SetCookie(w, &http.Cookie{
-			//	Name:  "User",
-			//	Value: token,
-			//})
 			ctx := context.WithValue(r.Context(), model.UserIDKey, userID)
-			//r = r.WithContext(ctx)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
+	}
+}
+
+func addCookie(userID string, auth *auth.AuthService) *http.Cookie {
+	token := auth.CreateToken(userID)
+	return &http.Cookie{
+		Name:  "User",
+		Value: token,
 	}
 }
