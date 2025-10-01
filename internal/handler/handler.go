@@ -65,13 +65,17 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, err := h.service.GetID(ctx, shortCode)
+	url, err := h.service.GetID(ctx, shortCode)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Location", originalURL)
+	if url.DeletedFlag {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+	w.Header().Set("Location", url.OriginalURL)
 	w.WriteHeader(307)
 
 }

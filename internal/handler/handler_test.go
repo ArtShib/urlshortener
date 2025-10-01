@@ -12,7 +12,7 @@ import (
 
 type URLServiceTest struct {
 	Shortenfunc          func(ctx context.Context, url string) (string, error)
-	GetIDfunc            func(ctx context.Context, shortCode string) (string, error)
+	GetIDfunc            func(ctx context.Context, shortCode string) (*model.URL, error)
 	ShortenJsonfunc      func(ctx context.Context, url string) (*model.ResponseShortener, error)
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
@@ -23,7 +23,7 @@ func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error
 	return s.Shortenfunc(ctx, url)
 }
 
-func (s *URLServiceTest) GetID(ctx context.Context, shortCode string) (string, error) {
+func (s *URLServiceTest) GetID(ctx context.Context, shortCode string) (*model.URL, error) {
 	return s.GetIDfunc(ctx, shortCode)
 }
 
@@ -67,8 +67,10 @@ func TestUrlHandler_Shorten(t *testing.T) {
 
 func TestURLHandler_GetID(t *testing.T) {
 	urlServiceTest := &URLServiceTest{
-		GetIDfunc: func(ctx context.Context, url string) (string, error) {
-			return "sedczfrH", nil
+		GetIDfunc: func(ctx context.Context, url string) (*model.URL, error) {
+			return &model.URL{
+				ShortURL: "sedczfrH",
+			}, nil
 		},
 	}
 

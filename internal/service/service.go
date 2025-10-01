@@ -62,18 +62,18 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 	return urlModel.ShortURL, err
 }
 
-func (s *URLService) GetID(ctx context.Context, shortCode string) (string, error) {
+func (s *URLService) GetID(ctx context.Context, shortCode string) (*model.URL, error) {
 
 	if shortCode == "" {
-		return "", errors.New("empty short code")
+		return nil, errors.New("empty short code")
 	}
 
 	url, err := s.repo.Get(ctx, shortCode)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return url.OriginalURL, nil
+	return url, nil
 }
 
 func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {

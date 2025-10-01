@@ -65,10 +65,10 @@ func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.U
 }
 
 func (p *PostgresRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
-	query := `select uuid, short_url, original_url from a_url_short where uuid = $1 LIMIT 1`
+	query := `select uuid, short_url, original_url, user_id, is_deleted from a_url_short where uuid = $1 LIMIT 1`
 	row := p.db.QueryRowContext(ctx, query, uuid)
 	var url model.URL
-	if err := row.Scan(&url.UUID, &url.ShortURL, &url.OriginalURL); err != nil {
+	if err := row.Scan(&url.UUID, &url.ShortURL, &url.OriginalURL, &url.UserID, &url.DeletedFlag); err != nil {
 		return nil, err
 	}
 	return &url, nil
@@ -81,7 +81,7 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 						short_url text not null,
 						original_url text UNIQUE not null,
 						user_id text default null,
-                        is_deleted boolean default false);
+                        is_deleted boolean default true);
 					CREATE index IF NOT EXISTS idx_short_url_uuid ON a_url_short(uuid);`
 	if _, err := p.db.ExecContext(ctx, createTable); err != nil {
 		return err
