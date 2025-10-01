@@ -81,7 +81,7 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 						short_url text not null,
 						original_url text UNIQUE not null,
 						user_id text default null,
-                        is_deleted boolean default true);
+                        is_deleted boolean default false;
 					CREATE index IF NOT EXISTS idx_short_url_uuid ON a_url_short(uuid);`
 	if _, err := p.db.ExecContext(ctx, createTable); err != nil {
 		return err
