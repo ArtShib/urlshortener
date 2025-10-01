@@ -28,11 +28,17 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 			t1 := time.Now()
 
 			userID, _ := r.Context().Value(model.UserIDKey).(string)
-			token, _ := r.Cookie("User")
+			var s string
+			token, err := r.Cookie("User")
+			if err != nil {
+				s = "not"
+			} else {
+				s = token.Value
+			}
 			defer func() {
 				entry.Info("request completed",
 					slog.String("userID", userID),
-					slog.String("token", token.Value),
+					slog.String("token", s),
 					slog.Int("status", ww.Status()),
 					slog.Int("bytes", ww.BytesWritten()),
 					slog.String("duration", time.Since(t1).String()),

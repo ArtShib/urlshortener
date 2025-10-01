@@ -6,6 +6,7 @@ import (
 
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
 	"github.com/ArtShib/urlshortener/internal/model"
+	"github.com/go-chi/chi/middleware"
 )
 
 func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
@@ -26,8 +27,10 @@ func Auth(auth *auth.AuthService) func(next http.Handler) http.Handler {
 					return
 				}
 				ctx := context.WithValue(r.Context(), model.UserIDKey, userID)
-				//r = r.WithContext(ctx)
-				next.ServeHTTP(w, r.WithContext(ctx))
+				r = r.WithContext(ctx)
+				ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+				next.ServeHTTP(ww, r)
+				return
 			}
 			//else if !auth.ValidateToken(cookie.Value) {
 			//	userID, err = auth.GenerateUserID()
