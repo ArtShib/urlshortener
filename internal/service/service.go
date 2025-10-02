@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
@@ -19,6 +21,7 @@ type URLRepository interface {
 	Get(ctx context.Context, shortCode string) (*model.URL, error)
 	Ping(ctx context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
+	DeleteBatch(ctx context.Context, batchSTR string) error
 }
 
 type URLService struct {
@@ -138,4 +141,17 @@ func (s *URLService) GetJSONBatch(ctx context.Context, userID string) (model.URL
 		return nil, err
 	}
 	return UURLUserBatch, nil
+}
+
+func (s *URLService) DeleteBatch(ctx context.Context, request model.DeleteRequest) error {
+	pairs := make([]string, len(request.UUIDs))
+	for i, uuid := range request.UUIDs {
+		pairs[i] = fmt.Sprintf("('%s','%s')", uuid, request.UserID)
+	}
+
+	deleteRequest := strings.Join(pairs, ",")
+	if err := s.repo.DeleteBatch(ctx, deleteRequest); err != nil {
+		return err
+	}
+	return nil
 }

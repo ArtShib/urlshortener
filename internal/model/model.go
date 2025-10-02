@@ -67,3 +67,8 @@ type GetURLUser struct {
 	UUID   string
 	UserID string
 }
+
+type DeleteRequest struct {
+	UUIDs  []string `json:"uuids"`
+	UserID string   `json:"user_id"`
+}

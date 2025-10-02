@@ -190,13 +190,17 @@ func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
+	var deleteRequest model.DeleteRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&deleteRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//uuid = strings.Split(string(body), ",")
+
 	w.WriteHeader(http.StatusAccepted)
 
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
+	h.service.DeleteBatch(ctx, deleteRequest)
 }

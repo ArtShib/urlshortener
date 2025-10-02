@@ -17,6 +17,11 @@ type URLServiceTest struct {
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
 	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request) (model.URLUserBatch, error)
+	DeleteBatchfunc      func(ctx context.Context, request model.DeleteRequest) error
+}
+
+func (s *URLServiceTest) DeleteBatch(ctx context.Context, request model.DeleteRequest) error {
+	return s.DeleteBatchfunc(ctx, request)
 }
 
 func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error) {

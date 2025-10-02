@@ -15,6 +15,7 @@ type URLRepository interface {
 	Close() error
 	Ping(context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
+	DeleteBatch(ctx context.Context, batchSTR string) error
 }
 
 func NewRepository(ctx context.Context, repoType string, dsnORpath string) (URLRepository, error) {

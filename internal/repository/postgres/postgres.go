@@ -113,3 +113,16 @@ func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model
 	}
 	return urls, nil
 }
+
+func (p *PostgresRepository) DeleteBatch(ctx context.Context, batchSTR string) error {
+	query := `update a_url_short 
+			  set is_deleted = true
+			  where (uuid, user_id) IN ($1)
+			  and is_deleted = false`
+
+	_, err := p.db.ExecContext(ctx, query, batchSTR)
+	if err != nil {
+		return err
+	}
+	return nil
+}
