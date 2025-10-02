@@ -71,10 +71,10 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//if url.DeletedFlag {
-	//	w.WriteHeader(http.StatusGone)
-	//	return
-	//}
+	if url.DeletedFlag {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
 	w.Header().Set("Location", url.OriginalURL)
 	w.WriteHeader(307)
 
