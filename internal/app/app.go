@@ -47,7 +47,7 @@ func (a *App) Run() {
 }
 
 func (a *App) Stop(ctx context.Context) {
-	a.Service.Stop()
 	a.Repository.Close()
+	a.Service.Stop()
 	a.Server.Shutdown(ctx)
 }
