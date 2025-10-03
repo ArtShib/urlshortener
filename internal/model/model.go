@@ -63,11 +63,11 @@ const (
 	UserIDKey contextKey = "userID"
 )
 
-type GetURLUser struct {
+type URLUserRequest struct {
 	UUID   string
 	UserID string
 }
-
+type URLUserRequestArray []URLUserRequest
 type DeleteRequest struct {
 	UUIDs  []string `json:"uuids"`
 	UserID string   `json:"user_id"`

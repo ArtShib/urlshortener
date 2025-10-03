@@ -136,6 +136,6 @@ func (r *MemoryRepository) GetBatch(ctx context.Context, userID string) (model.U
 	return nil, nil
 }
 
-func (r *MemoryRepository) DeleteBatch(ctx context.Context, batchSTR string) error {
+func (r *MemoryRepository) DeleteBatch(ctx context.Context, ddeleteRequest model.URLUserRequestArray) error {
 	return nil
 }

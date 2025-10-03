@@ -19,6 +19,7 @@ type App struct {
 	Server     *http.Server
 	Config     *config.Config
 	Auth       *auth.AuthService
+	Service    *service.URLService
 }
 
 func NewApp(cfg *config.Config, repo *repository.URLRepository) *App {
@@ -46,6 +47,7 @@ func (a *App) Run() {
 }
 
 func (a *App) Stop(ctx context.Context) {
+	a.Service.Stop()
 	a.Repository.Close()
 	a.Server.Shutdown(ctx)
 }

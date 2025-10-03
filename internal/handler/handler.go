@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ArtShib/urlshortener/internal/model"
@@ -192,18 +191,12 @@ func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//deleteRequest.UserID =
-	//decoder := json.NewDecoder(r.Body)
-	//if err := decoder.Decode(&deleteRequest); err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return
-	//}
-	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
+	var uuids []string
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&uuids); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	uuids := strings.Split(string(body), ",")
 
 	deleteRequest := model.DeleteRequest{
 		UserID: userID,
@@ -214,6 +207,9 @@ func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
-	h.service.DeleteBatch(ctx, deleteRequest)
+	if err := h.service.DeleteBatch(ctx, &deleteRequest); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 }

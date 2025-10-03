@@ -51,10 +51,6 @@ func (a *AuthService) ValidateToken(token string) bool {
 	return a.verifySignature(expected, sign)
 }
 
-//func (a *AuthService) splitToken(token string) []string {
-//	return strings.Split(token, ":")
-//}
-
 func (a AuthService) GetUserID(token string) string {
 	tokenBytes, _ := hex.DecodeString(token)
 	userID := tokenBytes[:16]

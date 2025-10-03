@@ -3,6 +3,9 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log"
+	"strings"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -90,7 +93,7 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 }
 
 func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
-	query := `select short_url, original_url from a_url_short where user_id = $1 `
+	query := `select short_url, original_url from a_url_short where user_id = $1`
 	rows, err := p.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -114,15 +117,32 @@ func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model
 	return urls, nil
 }
 
-func (p *PostgresRepository) DeleteBatch(ctx context.Context, batchSTR string) error {
-	query := `update a_url_short 
-			  set is_deleted = true
-			  where (uuid, user_id) IN ($1)
-			  and is_deleted = false`
+func (p *PostgresRepository) DeleteBatch(ctx context.Context, deleteRequest model.URLUserRequestArray) error {
+	//log.Fatalln(batchSTR)
 
-	_, err := p.db.ExecContext(ctx, query, batchSTR)
+	values := make([]string, len(deleteRequest))
+	args := make([]interface{}, 0, len(deleteRequest)*2)
+
+	for i, req := range deleteRequest {
+		pos1, pos2 := len(args)+1, len(args)+2
+		values[i] = fmt.Sprintf("($%d, $%d)", pos1, pos2)
+		args = append(args, req.UUID, req.UserID)
+	}
+
+	query := fmt.Sprintf(`
+        UPDATE a_url_short 
+        SET is_deleted = true
+        FROM (VALUES %s) AS targets(uuid, user_id)
+        WHERE a_url_short.uuid = targets.uuid 
+          AND a_url_short.user_id = targets.user_id
+          AND a_url_short.is_deleted = false`,
+		strings.Join(values, ", "))
+
+	_, err := p.db.ExecContext(ctx, query, args...)
 	if err != nil {
+		log.Fatalln(err.Error())
 		return err
 	}
+	//log.Fatalln(result)
 	return nil
 }
