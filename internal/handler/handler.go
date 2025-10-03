@@ -207,7 +207,7 @@ func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
-	if err := h.service.DeleteBatch(ctx, &deleteRequest); err != nil {
+	if err := h.service.DeleteBatch(ctx, deleteRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

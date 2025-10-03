@@ -146,7 +146,7 @@ func (s *URLService) GetJSONBatch(ctx context.Context, userID string) (model.URL
 	return UURLUserBatch, nil
 }
 
-func (s *URLService) DeleteBatch(ctx context.Context, request *model.DeleteRequest) error {
+func (s *URLService) DeleteBatch(ctx context.Context, request model.DeleteRequest) error {
 	//if err := s.repo.DeleteBatch(ctx, request); err != nil {
 	//	return err
 	//}

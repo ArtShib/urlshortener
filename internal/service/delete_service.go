@@ -61,7 +61,7 @@ func (s *DeleteService) Stop() {
 	s.wg.Wait()
 }
 
-func (s *DeleteService) AddQueueDelete(deleteRequest *model.DeleteRequest) {
+func (s *DeleteService) AddQueueDelete(deleteRequest model.DeleteRequest) {
 	if len(deleteRequest.UUIDs) == 0 {
 		return
 	}

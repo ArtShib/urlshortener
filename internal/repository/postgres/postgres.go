@@ -122,7 +122,7 @@ func (p *PostgresRepository) DeleteBatch(ctx context.Context, deleteRequest mode
 
 	values := make([]string, len(deleteRequest))
 	args := make([]interface{}, 0, len(deleteRequest)*2)
-
+	log.Fatalln(args...)
 	for i, req := range deleteRequest {
 		pos1, pos2 := len(args)+1, len(args)+2
 		values[i] = fmt.Sprintf("($%d, $%d)", pos1, pos2)
