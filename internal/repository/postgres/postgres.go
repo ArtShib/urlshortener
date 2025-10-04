@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/ArtShib/urlshortener/internal/model"
@@ -118,11 +117,9 @@ func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model
 }
 
 func (p *PostgresRepository) DeleteBatch(ctx context.Context, deleteRequest model.URLUserRequestArray) error {
-	//log.Fatalln(batchSTR)
 
 	values := make([]string, len(deleteRequest))
 	args := make([]interface{}, 0, len(deleteRequest)*2)
-	log.Fatalln(args...)
 	for i, req := range deleteRequest {
 		pos1, pos2 := len(args)+1, len(args)+2
 		values[i] = fmt.Sprintf("($%d, $%d)", pos1, pos2)
@@ -140,9 +137,8 @@ func (p *PostgresRepository) DeleteBatch(ctx context.Context, deleteRequest mode
 
 	_, err := p.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Fatalln(err.Error())
 		return err
 	}
-	//log.Fatalln(result)
+
 	return nil
 }

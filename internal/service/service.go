@@ -23,19 +23,19 @@ type URLRepository interface {
 }
 
 type URLService struct {
-	repo      URLRepository
-	config    *model.ShortServiceConfig
-	svcDelete *DeleteService
+	repo   URLRepository
+	config *model.ShortServiceConfig
+	//svcDelete *DeleteService
 }
 
 func NewURLService(repo URLRepository, cfg *model.ShortServiceConfig) *URLService {
 
 	urlService := &URLService{
-		repo:      repo,
-		config:    cfg,
-		svcDelete: NewDeleteService(DefaultConfig()),
+		repo:   repo,
+		config: cfg,
+		//svcDelete: NewDeleteService(DefaultConfig()),
 	}
-	urlService.svcDelete.Start()
+	//urlService.svcDelete.Start()
 	return urlService
 }
 
@@ -146,14 +146,10 @@ func (s *URLService) GetJSONBatch(ctx context.Context, userID string) (model.URL
 	return UURLUserBatch, nil
 }
 
-func (s *URLService) DeleteBatch(ctx context.Context, request model.DeleteRequest) error {
-	//if err := s.repo.DeleteBatch(ctx, request); err != nil {
-	//	return err
-	//}
-	s.svcDelete.AddQueueDelete(request)
-	return nil
-}
+func (s *URLService) DeleteBatch(ctx context.Context, batch model.URLUserRequestArray) error {
 
-func (s *URLService) Stop() {
-	s.svcDelete.Stop()
+	if err := s.repo.DeleteBatch(ctx, batch); err != nil {
+		return err
+	}
+	return nil
 }

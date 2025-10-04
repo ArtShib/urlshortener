@@ -10,17 +10,17 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-func NewRouter(svc URLService, log *slog.Logger, auth *auth.AuthService) http.Handler {
+func NewRouter(svc URLService, log *slog.Logger, auth *auth.AuthService, poolDel WorkerPoolDelete) http.Handler {
 
 	mux := chi.NewRouter()
-	mux.Use(customMiddleware.Auth(auth))
+	mux.Use(customMiddleware.Auth(auth, log))
 	mux.Use(middleware.RequestID)
 	//mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
 	mux.Use(customMiddleware.New(log))
 	mux.Use(customMiddleware.GzipMiddleware)
 
-	handler := NewURLHandler(svc)
+	handler := NewURLHandler(svc, poolDel)
 	mux.Post("/", handler.Shorten)
 	mux.Post("/api/shorten", handler.ShortenJSON)
 	mux.Get("/{shortCode}", handler.GetID)

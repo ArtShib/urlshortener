@@ -17,12 +17,14 @@ const (
 )
 
 type URLHandler struct {
-	service URLService
+	service          URLService
+	workerPoolDelete WorkerPoolDelete
 }
 
-func NewURLHandler(svc URLService) *URLHandler {
+func NewURLHandler(svc URLService, pool WorkerPoolDelete) *URLHandler {
 	return &URLHandler{
-		service: svc,
+		service:          svc,
+		workerPoolDelete: pool,
 	}
 }
 
@@ -184,13 +186,13 @@ func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
+
 	userID, ok := r.Context().Value(model.UserIDKey).(string)
 	if !ok || userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	//deleteRequest.UserID =
 	var uuids []string
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&uuids); err != nil {
@@ -198,18 +200,13 @@ func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleteRequest := model.DeleteRequest{
+	deleteRequest := &model.DeleteRequest{
 		UserID: userID,
 		UUIDs:  uuids,
 	}
+
 	w.WriteHeader(http.StatusAccepted)
 
-	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
-	defer cancel()
-
-	if err := h.service.DeleteBatch(ctx, deleteRequest); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	h.workerPoolDelete.AddRequest(deleteRequest)
 
 }

@@ -10,6 +10,12 @@ import (
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
+type WorkerPoolDeleteTest struct {
+	AddRequestfunc func(req *model.DeleteRequest)
+}
+
+func (w *WorkerPoolDeleteTest) AddRequest(req *model.DeleteRequest) {}
+
 type URLServiceTest struct {
 	Shortenfunc          func(ctx context.Context, url string) (string, error)
 	GetIDfunc            func(ctx context.Context, shortCode string) (*model.URL, error)
@@ -17,11 +23,6 @@ type URLServiceTest struct {
 	Pingfunc             func(ctx context.Context) error
 	ShortenJSONBatchfunc func(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
 	GetJSONBatchfunc     func(w http.ResponseWriter, r *http.Request) (model.URLUserBatch, error)
-	DeleteBatchfunc      func(ctx context.Context, request model.DeleteRequest) error
-}
-
-func (s *URLServiceTest) DeleteBatch(ctx context.Context, request model.DeleteRequest) error {
-	return s.DeleteBatchfunc(ctx, request)
 }
 
 func (s *URLServiceTest) Shorten(ctx context.Context, url string) (string, error) {
@@ -54,8 +55,10 @@ func TestUrlHandler_Shorten(t *testing.T) {
 			return "sedczfrH", nil
 		},
 	}
-
-	handler := NewURLHandler(urlServiceTest)
+	workerPoolDelete := &WorkerPoolDeleteTest{
+		AddRequestfunc: func(req *model.DeleteRequest) {},
+	}
+	handler := NewURLHandler(urlServiceTest, workerPoolDelete)
 
 	bodyReq := strings.NewReader(`https://yandex.ru`)
 	req := httptest.NewRequest("POST", "/", bodyReq)
@@ -79,7 +82,10 @@ func TestURLHandler_GetID(t *testing.T) {
 		},
 	}
 
-	handler := NewURLHandler(urlServiceTest)
+	workerPoolDelete := &WorkerPoolDeleteTest{
+		AddRequestfunc: func(req *model.DeleteRequest) {},
+	}
+	handler := NewURLHandler(urlServiceTest, workerPoolDelete)
 
 	req := httptest.NewRequest("GET", "/e9db20b2", nil)
 
