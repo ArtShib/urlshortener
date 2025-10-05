@@ -24,15 +24,15 @@ type App struct {
 	WPoolDelete *workerpool.DeletePool
 }
 
-func NewApp(cfg *config.Config, repo *repository.URLRepository) *App {
+func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLRepository) *App {
 	app := &App{
 		Config:     cfg,
 		Repository: *repo,
 	}
 	app.Logger = logger.NewLogger()
 	svc := service.NewURLService(app.Repository, cfg.ShortService)
-	app.WPoolDelete = workerpool.NewWorkerPool(svc, app.Logger)
-	app.WPoolDelete.Start()
+	app.WPoolDelete = workerpool.NewWorkerPool(svc, app.Logger, cfg.Concurrency.WorkerPoolDelete)
+	app.WPoolDelete.Start(ctx)
 	app.Auth = auth.NewAuthService("048ff4ea240a9fdeac8f1422733e9f3b8b0291c969652225e25c5f0f9f8da654139c9e21")
 	app.Server = &http.Server{
 		Addr:    app.Config.HTTPServer.ServerAddress,

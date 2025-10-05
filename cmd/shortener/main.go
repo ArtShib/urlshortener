@@ -30,7 +30,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	app := app.NewApp(cfg, &repo)
+	app := app.NewApp(ctx, cfg, &repo)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)

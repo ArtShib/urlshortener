@@ -24,20 +24,22 @@ type DeletePool struct {
 	buffer         model.URLUserRequestArray
 	activeWorkers  int32
 	URLService     URLService
+	config         *model.WorkerPoolDelete
 }
 
-func NewWorkerPool(svc URLService, log *slog.Logger) *DeletePool {
+func NewWorkerPool(svc URLService, log *slog.Logger, cfg *model.WorkerPoolDelete) *DeletePool {
 	return &DeletePool{
 		logger:         log,
-		deleteRequests: make(chan *model.DeleteRequest, 3),
-		inputCh:        make(chan *model.URLUserRequest, 30),
-		buffer:         make(model.URLUserRequestArray, 0, 10),
+		deleteRequests: make(chan *model.DeleteRequest, cfg.CountWorkers),
+		inputCh:        make(chan *model.URLUserRequest, cfg.InputChainSize),
+		buffer:         make(model.URLUserRequestArray, 0, cfg.BufferSize),
 		URLService:     svc,
+		config:         cfg,
 	}
 }
-func (p *DeletePool) Start() {
+func (p *DeletePool) Start(ctx context.Context) {
 	p.logger.Info("Sart DeletePool")
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	p.cancel = cancel
 
 	go p.scaleWorkers(ctx)
@@ -57,7 +59,7 @@ func (p *DeletePool) scaleWorkers(ctx context.Context) {
 			queueLen := len(p.deleteRequests)
 			activeWorkers := atomic.LoadInt32(&p.activeWorkers)
 
-			if queueLen > 0 && activeWorkers < 3 {
+			if queueLen > 0 && activeWorkers < p.config.CountWorkers {
 				p.wg.Add(1)
 				atomic.AddInt32(&p.activeWorkers, 1)
 				go p.worker(ctx, int(activeWorkers)+1, p.deleteRequests)
@@ -112,7 +114,7 @@ func (p *DeletePool) AddRequest(req *model.DeleteRequest) {
 func (p *DeletePool) batcher(ctx context.Context) {
 	defer p.wg.Done()
 
-	ticker := time.NewTicker(time.Second * 2)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
 	for {
@@ -122,7 +124,7 @@ func (p *DeletePool) batcher(ctx context.Context) {
 			return
 
 		case task := <-p.inputCh:
-			p.addToBuffer(task)
+			p.addToBuffer(ctx, task)
 
 		case <-ticker.C:
 			p.flushIfNeeded(ctx)
@@ -145,14 +147,14 @@ func (p *DeletePool) flushBuffer(ctx context.Context) {
 		p.processBatch(ctx, batch)
 	}
 }
-func (p *DeletePool) addToBuffer(task *model.URLUserRequest) {
+func (p *DeletePool) addToBuffer(ctx context.Context, task *model.URLUserRequest) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	p.buffer = append(p.buffer, task)
 
-	if len(p.buffer) >= 11 {
-		go p.flushBufferAsync(p.getBufferCopy())
+	if len(p.buffer) >= p.config.BatchSize {
+		go p.flushBufferAsync(ctx, p.getBufferCopy())
 		p.buffer = p.buffer[:0]
 	}
 }
@@ -177,8 +179,8 @@ func (p *DeletePool) getBufferCopy() model.URLUserRequestArray {
 	return batch
 }
 
-func (p *DeletePool) flushBufferAsync(batch model.URLUserRequestArray) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (p *DeletePool) flushBufferAsync(ctx context.Context, batch model.URLUserRequestArray) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	p.processBatch(ctx, batch)
 }

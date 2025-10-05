@@ -72,3 +72,13 @@ type DeleteRequest struct {
 	UUIDs  []string `json:"uuids"`
 	UserID string   `json:"user_id"`
 }
+
+type Concurrency struct {
+	WorkerPoolDelete *WorkerPoolDelete
+}
+type WorkerPoolDelete struct {
+	CountWorkers   int32
+	InputChainSize int
+	BufferSize     int
+	BatchSize      int
+}
