@@ -7,29 +7,37 @@ import (
 
 	"github.com/ArtShib/urlshortener/internal/config"
 	"github.com/ArtShib/urlshortener/internal/handler"
+	"github.com/ArtShib/urlshortener/internal/lib/auth"
 	"github.com/ArtShib/urlshortener/internal/lib/logger"
 	"github.com/ArtShib/urlshortener/internal/repository"
 	"github.com/ArtShib/urlshortener/internal/service"
+	"github.com/ArtShib/urlshortener/internal/workerpool"
 )
 
-
 type App struct {
-	Logger *slog.Logger
-	Repository repository.URLRepository
-	Server	*http.Server
-	Config *config.Config
+	Logger      *slog.Logger
+	Repository  repository.URLRepository
+	Server      *http.Server
+	Config      *config.Config
+	Auth        *auth.AuthService
+	Service     *service.URLService
+	WPoolDelete *workerpool.DeletePool
 }
-func NewApp(cfg *config.Config, repo *repository.URLRepository) *App {
+
+func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLRepository) *App {
 	app := &App{
-		Config: cfg,
+		Config:     cfg,
 		Repository: *repo,
 	}
 	app.Logger = logger.NewLogger()
 	svc := service.NewURLService(app.Repository, cfg.ShortService)
-	app.Server =  &http.Server{
-				Addr: app.Config.HTTPServer.ServerAddress,
-				Handler: handler.NewRouter(svc, app.Logger),
-			} 
+	app.WPoolDelete = workerpool.NewWorkerPool(svc, app.Logger, cfg.Concurrency.WorkerPoolDelete)
+	app.WPoolDelete.Start(ctx)
+	app.Auth = auth.NewAuthService("048ff4ea240a9fdeac8f1422733e9f3b8b0291c969652225e25c5f0f9f8da654139c9e21")
+	app.Server = &http.Server{
+		Addr:    app.Config.HTTPServer.ServerAddress,
+		Handler: handler.NewRouter(svc, app.Logger, app.Auth, app.WPoolDelete),
+	}
 	return app
 }
 
@@ -38,11 +46,12 @@ func (a *App) Run() {
 		if err := a.Server.ListenAndServe(); err != nil {
 			a.Logger.Error(err.Error())
 		}
-		
+
 	}()
 }
 
-func (a *App) Stop(ctx context.Context){
+func (a *App) Stop(ctx context.Context) {
+	a.WPoolDelete.Stop()
 	a.Repository.Close()
 	a.Server.Shutdown(ctx)
 }

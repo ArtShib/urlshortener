@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -21,7 +23,7 @@ func NewPostgresRepository(ctx context.Context, connectionString string) (*Postg
 		return nil, err
 	}
 	if err := pg.Ping(ctx); err != nil {
-		return nil, err	
+		return nil, err
 	}
 	pg.LoadingRepository(ctx)
 	return pg, nil
@@ -42,9 +44,9 @@ func (p *PostgresRepository) Close() error {
 
 func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error) {
 	var isConflict bool
-	insertSQL :=  `WITH inserted AS (
-						INSERT INTO a_url_short (uuid, short_url, original_url)
-						VALUES ($1, $2, $3)
+	insertSQL := `WITH inserted AS (
+						INSERT INTO a_url_short (uuid, short_url, original_url, user_id)
+						VALUES ($1, $2, $3, $4)
 						ON CONFLICT (original_url) DO NOTHING
 						RETURNING *
 					)
@@ -52,23 +54,23 @@ func (p *PostgresRepository) Save(ctx context.Context, url *model.URL) (*model.U
 					UNION
 					SELECT uuid, short_url, true as is_conflict FROM a_url_short 
 					WHERE original_url = $3 AND NOT EXISTS (SELECT 1 FROM inserted)`
-	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL).
-			Scan(&url.UUID, &url.ShortURL, &isConflict)
+	err := p.db.QueryRowContext(ctx, insertSQL, url.UUID, url.ShortURL, url.OriginalURL, url.UserID).
+		Scan(&url.UUID, &url.ShortURL, &isConflict)
 
 	if err != nil {
 		return nil, err
 	}
 	if isConflict {
-		return url, model.ErrURLConflict 
+		return url, model.ErrURLConflict
 	}
 	return url, nil
 }
 
 func (p *PostgresRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
-	query := `select uuid, short_url, original_url from a_url_short where uuid = $1 LIMIT 1`
+	query := `select uuid, short_url, original_url, user_id, is_deleted from a_url_short where uuid = $1 LIMIT 1`
 	row := p.db.QueryRowContext(ctx, query, uuid)
 	var url model.URL
-	if err := row.Scan(&url.UUID, &url.ShortURL, &url.OriginalURL); err != nil {
+	if err := row.Scan(&url.UUID, &url.ShortURL, &url.OriginalURL, &url.UserID, &url.DeletedFlag); err != nil {
 		return nil, err
 	}
 	return &url, nil
@@ -79,10 +81,64 @@ func (p *PostgresRepository) LoadingRepository(ctx context.Context) error {
 						id SERIAL PRIMARY KEY,
 						uuid text not null,
 						short_url text not null,
-						original_url text UNIQUE not null);
+						original_url text UNIQUE not null,
+						user_id text default null,
+                        is_deleted boolean default false);
 					CREATE index IF NOT EXISTS idx_short_url_uuid ON a_url_short(uuid);`
-	if _ , err := p.db.ExecContext(ctx, createTable); err != nil {
+	if _, err := p.db.ExecContext(ctx, createTable); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (p *PostgresRepository) GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
+	query := `select short_url, original_url from a_url_short where user_id = $1`
+	rows, err := p.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	if rows == nil {
+		return model.URLUserBatch{}, nil
+	}
+	defer rows.Close()
+
+	var urls model.URLUserBatch
+	for rows.Next() {
+		var url model.URLUser
+		if err := rows.Scan(&url.ShortURL, &url.OriginalURL); err != nil {
+			return nil, err
+		}
+		urls = append(urls, url)
+	}
+	if err := rows.Err(); err != nil {
+		return model.URLUserBatch{}, err
+	}
+	return urls, nil
+}
+
+func (p *PostgresRepository) DeleteBatch(ctx context.Context, deleteRequest model.URLUserRequestArray) error {
+
+	values := make([]string, len(deleteRequest))
+	args := make([]interface{}, 0, len(deleteRequest)*2)
+	for i, req := range deleteRequest {
+		pos1, pos2 := len(args)+1, len(args)+2
+		values[i] = fmt.Sprintf("($%d, $%d)", pos1, pos2)
+		args = append(args, req.UUID, req.UserID)
+	}
+
+	query := fmt.Sprintf(`
+        UPDATE a_url_short 
+        SET is_deleted = true
+        FROM (VALUES %s) AS targets(uuid, user_id)
+        WHERE a_url_short.uuid = targets.uuid 
+          AND a_url_short.user_id = targets.user_id
+          AND a_url_short.is_deleted = false`,
+		strings.Join(values, ", "))
+
+	_, err := p.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -12,45 +12,44 @@ import (
 )
 
 const (
-    defaultRequestTimeout = 3 * time.Second
-    longOperationTimeout  = 10 * time.Second
+	defaultRequestTimeout = 3 * time.Second
+	longOperationTimeout  = 10 * time.Second
 )
 
-type URLHandler struct{
-	service URLService
+type URLHandler struct {
+	service          URLService
+	workerPoolDelete WorkerPoolDelete
 }
 
-func NewURLHandler(svc URLService) *URLHandler {
+func NewURLHandler(svc URLService, pool WorkerPoolDelete) *URLHandler {
 	return &URLHandler{
-		service: svc,
+		service:          svc,
+		workerPoolDelete: pool,
 	}
 }
 
 func (h *URLHandler) Shorten(w http.ResponseWriter, r *http.Request) {
-	
-	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
-	defer cancel()
 
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
-	
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	shortURL, err := h.service.Shorten(ctx, string(body))
+	shortURL, err := h.service.Shorten(r.Context(), string(body))
 	if err != nil && err != model.ErrURLConflict {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Length", strconv.Itoa(len(shortURL)))
-	
+
 	if err == model.ErrURLConflict {
 		w.WriteHeader(http.StatusConflict)
-	}else{
+	} else {
 		w.WriteHeader(201)
 	}
 
@@ -61,26 +60,30 @@ func (h *URLHandler) GetID(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
-	
+
 	shortCode := r.URL.Path[1:]
 	if shortCode == "" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	originalURL, err := h.service.GetID(ctx, shortCode) 
-	
+	url, err := h.service.GetID(ctx, shortCode)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Location", originalURL)
+	if url.DeletedFlag {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+	w.Header().Set("Location", url.OriginalURL)
 	w.WriteHeader(307)
 
 }
 
 func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
-	
+
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
@@ -99,11 +102,11 @@ func (h *URLHandler) ShortenJSON(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err == model.ErrURLConflict {
 		w.WriteHeader(http.StatusConflict)
-	}else{
+	} else {
 		w.WriteHeader(201)
 	}
 	encoder := json.NewEncoder(w)
@@ -117,14 +120,14 @@ func (h *URLHandler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), defaultRequestTimeout)
 	defer cancel()
 	if err := h.service.Ping(ctx); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)	
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
-	
+
 	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
 	defer cancel()
 
@@ -143,7 +146,7 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(201)
 	encoder := json.NewEncoder(w)
@@ -151,4 +154,59 @@ func (h *URLHandler) ShortenJSONBatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *URLHandler) GetJSONBatch(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value(model.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), longOperationTimeout)
+	defer cancel()
+
+	urlsBatch, err := h.service.GetJSONBatch(ctx, userID)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if len(urlsBatch) == 0 {
+		http.Error(w, "Not content", http.StatusNoContent)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(urlsBatch); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *URLHandler) DeleteURLs(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value(model.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var uuids []string
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&uuids); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	deleteRequest := &model.DeleteRequest{
+		UserID: userID,
+		UUIDs:  uuids,
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+
+	h.workerPoolDelete.AddRequest(deleteRequest)
+
 }

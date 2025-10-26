@@ -5,13 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/go-chi/chi/middleware"
 )
 
 func New(log *slog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		log.Info("logger middleware enabled")
-		fn := func(w http.ResponseWriter, r *http.Request){
+		fn := func(w http.ResponseWriter, r *http.Request) {
+
 			entry := log.With(
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
@@ -26,8 +28,18 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 
 			t1 := time.Now()
 
-			defer func () {
+			userID, _ := r.Context().Value(model.UserIDKey).(string)
+			var token string
+			cookie, err := r.Cookie("User")
+			if err != nil {
+				token = "Null"
+			} else {
+				token = cookie.Value
+			}
+			defer func() {
 				entry.Info("request completed",
+					slog.String("userID", userID),
+					slog.String("token", token),
 					slog.Int("status", ww.Status()),
 					slog.Int("bytes", ww.BytesWritten()),
 					slog.String("duration", time.Since(t1).String()),

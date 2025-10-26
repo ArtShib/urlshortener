@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	HTTPServer *model.HTTPServerConfig 
-	ShortService *model.ShortServiceConfig 
-	RepoConfig *model.RepositoryConfig
-} 
+	HTTPServer   *model.HTTPServerConfig
+	ShortService *model.ShortServiceConfig
+	RepoConfig   *model.RepositoryConfig
+	Concurrency  *model.Concurrency
+}
 
 func (c *Config) LoadConfigEnv() error {
 	if err := godotenv.Load(); err != nil {
@@ -27,7 +28,7 @@ func (c *Config) LoadConfigEnv() error {
 	}
 	if err := env.Parse(c.RepoConfig); err != nil {
 		return err
-	}		
+	}
 	return nil
 }
 func (c *Config) LoadConfigFlag() {
@@ -48,11 +49,19 @@ func (c *Config) LoadConfigFlag() {
 
 func MustLoadConfig() *Config {
 	cfg := Config{
-		HTTPServer: &model.HTTPServerConfig{},
+		HTTPServer:   &model.HTTPServerConfig{},
 		ShortService: &model.ShortServiceConfig{},
 		RepoConfig: &model.RepositoryConfig{
 			FileStoragePath: os.Getenv("FILE_STORAGE_PATH"),
-			DatabaseDSN: os.Getenv("DATABASE_DSN"),
+			DatabaseDSN:     os.Getenv("DATABASE_DSN"),
+		},
+		Concurrency: &model.Concurrency{
+			WorkerPoolDelete: &model.WorkerPoolDelete{
+				CountWorkers:   3,
+				InputChainSize: 20,
+				BufferSize:     10,
+				BatchSize:      10,
+			},
 		},
 	}
 	cfg.LoadConfigEnv()

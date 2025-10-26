@@ -10,13 +10,13 @@ import (
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
-type MemoryRepository struct{
-	listURLs map[string] *model.URL
-	mu sync.RWMutex
-	fileName string	
+type MemoryRepository struct {
+	listURLs map[string]*model.URL
+	mu       sync.RWMutex
+	fileName string
 }
 
-func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepository, error){
+func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepository, error) {
 
 	repo := &MemoryRepository{
 		listURLs: make(map[string]*model.URL),
@@ -28,7 +28,7 @@ func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepositor
 	return repo, nil
 }
 
-func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error){
+func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, ok := r.listURLs[url.UUID]
@@ -42,31 +42,31 @@ func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL
 func (r *MemoryRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	url, ok := r.listURLs[uuid]
-	
+
 	if !ok {
 		return nil, errors.New("longUrl is not found")
-	}	
-	
+	}
+
 	return url, nil
 }
 
 func (r *MemoryRepository) LoadingRepository(ctx context.Context) error {
-	
-	info, err := os.Stat(r.fileName) 
+
+	info, err := os.Stat(r.fileName)
 	if os.IsNotExist(err) {
-		return err 
+		return err
 	}
-	if info.Size() == 0{
+	if info.Size() == 0 {
 		return errors.New("file is empty")
 	}
 	data, err := os.ReadFile(r.fileName)
 	if err != nil {
 		return err
 	}
-	
-	urls, err := r.unmarshalURL(data)	
+
+	urls, err := r.unmarshalURL(data)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (r *MemoryRepository) unmarshalURL(data []byte) ([]*model.URL, error) {
 func (r *MemoryRepository) loadData(ctx context.Context, urls []*model.URL) {
 	for _, url := range urls {
 		r.Save(ctx, url)
-	} 
+	}
 }
 
 func (r *MemoryRepository) Close() error {
@@ -96,11 +96,11 @@ func (r *MemoryRepository) Close() error {
 		return errors.New("listURLs is empty")
 	}
 
-	file, err := os.OpenFile(r.fileName, os.O_WRONLY|os.O_CREATE| os.O_TRUNC, 0644)
+	file, err := os.OpenFile(r.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-	defer func() error{
+	defer func() error {
 		if err := file.Close(); err != nil {
 			return err
 		}
@@ -112,22 +112,30 @@ func (r *MemoryRepository) Close() error {
 		urls = append(urls, v)
 	}
 
-	data, err := json.Marshal(urls)	
+	data, err := json.Marshal(urls)
 	if err != nil {
 		return err
 	}
-	_, err = file.Write(data) 
+	_, err = file.Write(data)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-
 func (r *MemoryRepository) Ping(ctx context.Context) error {
-	_, err := os.Stat(r.fileName) 
+	_, err := os.Stat(r.fileName)
 	if os.IsNotExist(err) {
-		return err 
+		return err
 	}
+	return nil
+}
+
+func (r *MemoryRepository) GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
+
+	return nil, nil
+}
+
+func (r *MemoryRepository) DeleteBatch(ctx context.Context, ddeleteRequest model.URLUserRequestArray) error {
 	return nil
 }

@@ -5,28 +5,29 @@ import (
 	"net/http"
 
 	customMiddleware "github.com/ArtShib/urlshortener/internal/handler/middleware"
+	"github.com/ArtShib/urlshortener/internal/lib/auth"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-
-func NewRouter(svc URLService, log *slog.Logger) http.Handler {
+func NewRouter(svc URLService, log *slog.Logger, auth *auth.AuthService, poolDel WorkerPoolDelete) http.Handler {
 
 	mux := chi.NewRouter()
-
+	mux.Use(customMiddleware.Auth(auth, log))
 	mux.Use(middleware.RequestID)
-	mux.Use(middleware.Logger)
+	//mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
 	mux.Use(customMiddleware.New(log))
 	mux.Use(customMiddleware.GzipMiddleware)
 
-	handler := NewURLHandler(svc)
+	handler := NewURLHandler(svc, poolDel)
 	mux.Post("/", handler.Shorten)
 	mux.Post("/api/shorten", handler.ShortenJSON)
-	mux.Get("/{shortCode}",  handler.GetID)
+	mux.Get("/{shortCode}", handler.GetID)
 	mux.Get("/ping", handler.Ping)
 	mux.Post("/api/shorten/batch", handler.ShortenJSONBatch)
-	
+	mux.Get("/api/user/urls", handler.GetJSONBatch)
+	mux.Delete("/api/user/urls", handler.DeleteURLs)
+
 	return mux
 }
-
