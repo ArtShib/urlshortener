@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"os"
 
 	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/caarlos0/env"
@@ -67,8 +68,11 @@ func MustLoadConfig() (*Config, error) {
 	cfg := Config{
 		HTTPServer:   &model.HTTPServerConfig{},
 		ShortService: &model.ShortServiceConfig{},
-		RepoConfig:   &model.RepositoryConfig{},
-		AuditConfig:  &model.AuditConfig{},
+		RepoConfig: &model.RepositoryConfig{
+			FileStoragePath: os.Getenv("FILE_STORAGE_PATH"),
+			DatabaseDSN:     os.Getenv("DATABASE_DSN"),
+		},
+		AuditConfig: &model.AuditConfig{},
 		Concurrency: &model.Concurrency{
 			WorkerPoolDelete: &model.WorkerPoolDelete{
 				CountWorkers:   3,
