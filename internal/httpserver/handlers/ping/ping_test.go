@@ -63,6 +63,7 @@ func TestPingHandler(t *testing.T) {
 			handler(w, req)
 
 			resp := w.Result()
+			defer resp.Body.Close()
 			assert.Equal(t, test.expectedStatus, resp.StatusCode)
 			svc.AssertExpectations(t)
 		})
