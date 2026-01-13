@@ -21,7 +21,7 @@ type Client struct {
 }
 
 // New конструктор Client
-func New(log *slog.Logger, auditUrl string) *Client {
+func New(log *slog.Logger, auditURL string) *Client {
 	return &Client{
 		httpClient: &http.Client{
 			Timeout: time.Second * 10,
@@ -33,7 +33,7 @@ func New(log *slog.Logger, auditUrl string) *Client {
 			},
 		},
 		log:      log,
-		auditURL: auditUrl,
+		auditURL: auditURL,
 	}
 }
 
