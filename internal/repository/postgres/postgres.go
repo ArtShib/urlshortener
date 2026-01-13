@@ -86,7 +86,7 @@ func (p *RepositoryPostgres) Save(ctx context.Context, url *model.URL) (*model.U
 					)
 					select uuid, short_url, false as is_conflict FROM inserted
 					UNION
-					SELECT uuid, short_url, true as is_conflict FROM a_url_short 
+					SELECT uuid, short_url, true as is_conflict FROM a_url_short
 					WHERE original_url = $3 AND NOT EXISTS (SELECT 1 FROM inserted)`)
 
 	if err != nil {

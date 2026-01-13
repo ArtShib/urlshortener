@@ -44,6 +44,7 @@ func New(log *slog.Logger, svc URLService) http.HandlerFunc {
 		}
 
 		shortURL, err := svc.Shorten(r.Context(), string(body))
+
 		if err != nil && !errors.Is(err, model.ErrURLConflict) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

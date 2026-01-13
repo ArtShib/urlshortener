@@ -82,7 +82,6 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 	urlModel, err = s.repo.Save(ctx, urlModel)
 	if err != nil {
 		log.Error(op, "error", err)
-		return "", fmt.Errorf("%s: %w", op, err)
 	}
 	return urlModel.ShortURL, err
 }
