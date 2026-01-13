@@ -36,7 +36,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	eventRepo, err := repository.NewEventRepository(cfg.AuditConfig.AuditFile, cfg.AuditConfig.AuditUrl, logger)
+	eventRepo, err := repository.NewEventRepository(cfg.AuditConfig.AuditFile, cfg.AuditConfig.AuditURL, logger)
 	if err != nil {
 		logger.Error(op, "error", err)
 	}

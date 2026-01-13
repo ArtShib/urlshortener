@@ -55,8 +55,8 @@ func (c *Config) LoadConfigFlag() {
 	if c.AuditConfig.AuditFile == "" {
 		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "", "Audit file path") ///home/artem/GolandProjects/urlshortener/storage/audit.json
 	}
-	if c.AuditConfig.AuditUrl == "" {
-		flag.StringVar(&c.AuditConfig.AuditUrl, "AUDIT_URL", "", "URL to audit")
+	if c.AuditConfig.AuditURL == "" {
+		flag.StringVar(&c.AuditConfig.AuditURL, "AUDIT_URL", "", "URL to audit")
 	}
 
 	flag.Parse()

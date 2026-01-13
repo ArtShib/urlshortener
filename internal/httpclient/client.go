@@ -17,7 +17,7 @@ import (
 type Client struct {
 	log        *slog.Logger
 	httpClient *http.Client
-	auditUrl   string
+	auditURL   string
 }
 
 // New конструктор Client
@@ -33,7 +33,7 @@ func New(log *slog.Logger, auditUrl string) *Client {
 			},
 		},
 		log:      log,
-		auditUrl: auditUrl,
+		auditURL: auditUrl,
 	}
 }
 
@@ -51,7 +51,7 @@ func (c *Client) SendAuditRecord(ctx context.Context, record *model.Event) error
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.auditUrl, bytes.NewReader(body))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.auditURL, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

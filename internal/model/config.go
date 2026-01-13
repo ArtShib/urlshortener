@@ -39,5 +39,5 @@ type WorkerPoolEvent struct {
 // AuditConfig структура конфига Audit
 type AuditConfig struct {
 	AuditFile string `env:"AUDIT_FILE"`
-	AuditUrl  string `env:"AUDIT_URL"`
+	AuditURL  string `env:"AUDIT_URL"`
 }
