@@ -5,6 +5,7 @@ import (
 
 	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/caarlos0/env"
+	"github.com/joho/godotenv"
 )
 
 // Config структура конфига
@@ -18,9 +19,9 @@ type Config struct {
 
 // LoadConfigEnv загрузка данных в конфиг из env
 func (c *Config) LoadConfigEnv() error {
-	//if err := godotenv.Load(); err != nil {
-	//	return err
-	//}
+	if err := godotenv.Load(); err != nil {
+		return err
+	}
 	if err := env.Parse(c.HTTPServer); err != nil {
 		return err
 	}

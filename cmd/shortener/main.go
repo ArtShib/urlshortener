@@ -33,7 +33,7 @@ func main() {
 	}
 	if err != nil && !os.IsNotExist(err) {
 		logger.Error(op, "error", err)
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	eventRepo, err := repository.NewEventRepository(cfg.AuditConfig.AuditFile, cfg.AuditConfig.AuditUrl, logger)
@@ -49,7 +49,7 @@ func main() {
 	select {
 	case err := <-errCh:
 		logger.Error(op, "error", err)
-		os.Exit(1)
+		os.Exit(0)
 	case <-quit:
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer shutdownCancel()
