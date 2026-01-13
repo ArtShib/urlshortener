@@ -7,22 +7,26 @@ import (
 	"encoding/hex"
 )
 
-type AuthService struct {
+// Service структура сервиса авторизации
+type Service struct {
 	secret []byte
 }
 
-func NewAuthService(secret string) *AuthService {
-	return &AuthService{secret: []byte(secret)}
+// NewAuthService конструктор Service
+func NewAuthService(secret string) *Service {
+	return &Service{secret: []byte(secret)}
 }
 
-func (a AuthService) GenerateUserID() (string, error) {
+// GenerateUserID создание userID
+func (a Service) GenerateUserID() (string, error) {
 	bytes := make([]byte, 16)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
 }
-func (a *AuthService) signData(data string) []byte {
+
+func (a Service) signData(data string) []byte {
 	h := hmac.New(sha256.New, a.secret)
 	DataBytes, _ := hex.DecodeString(data)
 	h.Write(DataBytes)
@@ -30,19 +34,21 @@ func (a *AuthService) signData(data string) []byte {
 	return sign // hex.EncodeToString(sign)
 }
 
-func (a *AuthService) verifySignature(data string, sign []byte) bool {
+func (a Service) verifySignature(data string, sign []byte) bool {
 	expected := a.signData(data)
 	return hmac.Equal(sign, expected)
 }
 
-func (a *AuthService) CreateToken(userID string) string {
+// CreateToken создание токена
+func (a Service) CreateToken(userID string) string {
 	UserIDBytes, _ := hex.DecodeString(userID)
 	sign := a.signData(userID)
 	token := append(UserIDBytes, sign...)
 	return hex.EncodeToString(token)
 }
 
-func (a *AuthService) ValidateToken(token string) bool {
+// ValidateToken валидация токена
+func (a Service) ValidateToken(token string) bool {
 	tokenBytes, _ := hex.DecodeString(token)
 	userID := tokenBytes[:16]
 	sign := tokenBytes[16:]
@@ -51,7 +57,8 @@ func (a *AuthService) ValidateToken(token string) bool {
 	return a.verifySignature(expected, sign)
 }
 
-func (a AuthService) GetUserID(token string) string {
+// GetUserID получеие userID
+func (a Service) GetUserID(token string) string {
 	tokenBytes, _ := hex.DecodeString(token)
 	userID := tokenBytes[:16]
 

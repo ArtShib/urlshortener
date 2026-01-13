@@ -10,12 +10,14 @@ import (
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
+// MemoryRepository структура
 type MemoryRepository struct {
 	listURLs map[string]*model.URL
 	mu       sync.RWMutex
 	fileName string
 }
 
+// NewMemoryRepository конструктор MemoryRepository
 func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepository, error) {
 
 	repo := &MemoryRepository{
@@ -28,6 +30,7 @@ func NewMemoryRepository(ctx context.Context, fileName string) (*MemoryRepositor
 	return repo, nil
 }
 
+// Save метод для сохрания сокращенного url
 func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -39,6 +42,7 @@ func (r *MemoryRepository) Save(ctx context.Context, url *model.URL) (*model.URL
 	return url, nil
 }
 
+// Get метод получения оригинального url
 func (r *MemoryRepository) Get(ctx context.Context, uuid string) (*model.URL, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -52,6 +56,7 @@ func (r *MemoryRepository) Get(ctx context.Context, uuid string) (*model.URL, er
 	return url, nil
 }
 
+// LoadingRepository метод подготовки создания файла для сохранения мапы
 func (r *MemoryRepository) LoadingRepository(ctx context.Context) error {
 
 	info, err := os.Stat(r.fileName)
@@ -90,6 +95,7 @@ func (r *MemoryRepository) loadData(ctx context.Context, urls []*model.URL) {
 	}
 }
 
+// Close метод записи и сохранения файла
 func (r *MemoryRepository) Close() error {
 
 	if len(r.listURLs) == 0 {
@@ -123,6 +129,7 @@ func (r *MemoryRepository) Close() error {
 	return nil
 }
 
+// Ping метод проверки наличия файла
 func (r *MemoryRepository) Ping(ctx context.Context) error {
 	_, err := os.Stat(r.fileName)
 	if os.IsNotExist(err) {
@@ -131,11 +138,13 @@ func (r *MemoryRepository) Ping(ctx context.Context) error {
 	return nil
 }
 
+// GetBatch метод получения оригинального url по id пользователя
 func (r *MemoryRepository) GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
 
 	return nil, nil
 }
 
+// DeleteBatch метод установки признака удаления url
 func (r *MemoryRepository) DeleteBatch(ctx context.Context, ddeleteRequest model.URLUserRequestArray) error {
 	return nil
 }
