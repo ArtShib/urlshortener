@@ -46,13 +46,13 @@ func (c *Config) LoadConfigFlag() {
 		flag.StringVar(&c.ShortService.BaseURL, "b", "http://localhost:8080", "Address of the resulting shortened URL")
 	}
 	if c.RepoConfig.FileStoragePath == "" {
-		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "/Users/shibakin-av/IdeaProjects/go/urlshortener/storage/test22.json", "File storage path")
+		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "", "File storage path")
 	}
 	if c.RepoConfig.DatabaseDSN == "" {
 		flag.StringVar(&c.RepoConfig.DatabaseDSN, "d", "", "DataBase connection string")
 	}
 	if c.AuditConfig.AuditFile == "" {
-		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "/home/artem/GolandProjects/urlshortener/storage/audit.json", "Audit file path") ///home/artem/GolandProjects/urlshortener/storage/audit.json
+		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "", "Audit file path") ///home/artem/GolandProjects/urlshortener/storage/audit.json
 	}
 	if c.AuditConfig.AuditUrl == "" {
 		flag.StringVar(&c.AuditConfig.AuditUrl, "AUDIT_URL", "", "URL to audit")
