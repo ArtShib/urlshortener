@@ -17,7 +17,7 @@ type EventRepository interface {
 }
 
 // NewEventRepository конструктор создания репозитория под аудит
-func NewEventRepository(auditFilePath string, auditUrl string, log *slog.Logger) (EventRepository, error) {
+func NewEventRepository(auditFilePath string, auditURL string, log *slog.Logger) (EventRepository, error) {
 	const op = "repository.NewEventRepository"
 	logger := log.With(
 		slog.String("op", op),
@@ -30,8 +30,8 @@ func NewEventRepository(auditFilePath string, auditUrl string, log *slog.Logger)
 		}
 		return eventRepository, nil
 	}
-	if auditUrl != "" {
-		eventRepository := httpclient.New(log, auditUrl)
+	if auditURL != "" {
+		eventRepository := httpclient.New(log, auditURL)
 		return eventRepository, nil
 	}
 	return nil, fmt.Errorf("%s: %w", op, fmt.Errorf("audit file and url is empty"))

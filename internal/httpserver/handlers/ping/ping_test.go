@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type MockURLService struct {
@@ -63,7 +64,12 @@ func TestPingHandler(t *testing.T) {
 			handler(w, req)
 
 			resp := w.Result()
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
 			assert.Equal(t, test.expectedStatus, resp.StatusCode)
 			svc.AssertExpectations(t)
 		})

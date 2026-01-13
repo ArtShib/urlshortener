@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type MockURLService struct {
@@ -100,6 +101,11 @@ func TestGetIDHandler(t *testing.T) {
 			handler.ServeHTTP(w, req)
 
 			resp := w.Result()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					require.NoError(t, err)
+				}
+			}()
 
 			assert.Equal(t, test.expectedStatus, resp.StatusCode)
 			if test.expectedLocation != "" {

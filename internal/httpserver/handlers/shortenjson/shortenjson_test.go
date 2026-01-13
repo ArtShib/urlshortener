@@ -105,6 +105,12 @@ func TestShortenJSONHandler(t *testing.T) {
 			assert.Equal(t, test.expectedStatus, resp.StatusCode)
 
 			resBody, err := io.ReadAll(resp.Body)
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
 			require.NoError(t, err)
 			if test.isJSONResponse {
 				assert.JSONEq(t, test.expectedBody, string(resBody))

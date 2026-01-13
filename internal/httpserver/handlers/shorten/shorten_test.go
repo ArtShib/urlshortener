@@ -92,6 +92,7 @@ func TestShortenHandler(t *testing.T) {
 			assert.Equal(t, test.expectedStatus, resp.StatusCode)
 
 			resBody, err := io.ReadAll(resp.Body)
+
 			require.NoError(t, err)
 			assert.Equal(t, test.expectedBody, string(resBody))
 

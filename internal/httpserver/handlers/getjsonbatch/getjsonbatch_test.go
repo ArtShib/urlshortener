@@ -111,6 +111,11 @@ func TestGetJSONBatchHandler(t *testing.T) {
 			handler(w, req)
 
 			resp := w.Result()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					require.NoError(t, err)
+				}
+			}()
 
 			assert.Equal(t, test.expectedStatus, resp.StatusCode)
 
