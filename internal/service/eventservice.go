@@ -28,7 +28,7 @@ func NewEventService(eventRepository EventRepository, logger *slog.Logger) (*Eve
 	)
 	if eventRepository == nil {
 		log.Error(op, "error", fmt.Errorf("audit file and url is empty"))
-		return &EventService{logger: log}, fmt.Errorf("%s: %w", op, fmt.Errorf("audit file and url is empty"))
+		return nil, fmt.Errorf("%s: %w", op, fmt.Errorf("audit file and url is empty"))
 	}
 	return &EventService{
 		eventRepository: eventRepository,
