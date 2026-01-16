@@ -1,4 +1,4 @@
-package workerpool
+package requestdeletion
 
 import (
 	"context"
@@ -10,45 +10,54 @@ import (
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
+// URLService описывает интерфейс запросов на удаление.
 type URLService interface {
 	DeleteBatch(ctx context.Context, batch model.URLUserRequestArray) error
 }
 
+// DeletePool структура WorkerPool
 type DeletePool struct {
 	logger         *slog.Logger
 	wg             sync.WaitGroup
 	mu             sync.Mutex
 	cancel         context.CancelFunc
-	deleteRequests chan *model.DeleteRequest
-	inputCh        chan *model.URLUserRequest
+	deleteRequests chan model.DeleteRequest
+	inputCh        chan model.URLUserRequest
 	buffer         model.URLUserRequestArray
 	activeWorkers  int32
 	URLService     URLService
 	config         *model.WorkerPoolDelete
 }
 
+// NewWorkerPool конструктор WorkerPool
 func NewWorkerPool(svc URLService, log *slog.Logger, cfg *model.WorkerPoolDelete) *DeletePool {
 	return &DeletePool{
 		logger:         log,
-		deleteRequests: make(chan *model.DeleteRequest, cfg.CountWorkers),
-		inputCh:        make(chan *model.URLUserRequest, cfg.InputChainSize),
+		deleteRequests: make(chan model.DeleteRequest, cfg.CountWorkers),
+		inputCh:        make(chan model.URLUserRequest, cfg.InputChainSize),
 		buffer:         make(model.URLUserRequestArray, 0, cfg.BufferSize),
 		URLService:     svc,
 		config:         cfg,
 	}
 }
+
+// Start заускает WorkerPool
 func (p *DeletePool) Start(ctx context.Context) {
 	p.logger.Info("Sart DeletePool")
 	ctx, cancel := context.WithCancel(ctx)
 	p.cancel = cancel
 
+	p.wg.Add(1)
 	go p.scaleWorkers(ctx)
 
 	p.wg.Add(1)
 	go p.batcher(ctx)
 
 }
+
 func (p *DeletePool) scaleWorkers(ctx context.Context) {
+	defer p.wg.Done()
+
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -60,16 +69,18 @@ func (p *DeletePool) scaleWorkers(ctx context.Context) {
 			activeWorkers := atomic.LoadInt32(&p.activeWorkers)
 
 			if queueLen > 0 && activeWorkers < p.config.CountWorkers {
-				p.wg.Add(1)
+
 				atomic.AddInt32(&p.activeWorkers, 1)
+				p.wg.Add(1)
 				go p.worker(ctx, int(activeWorkers)+1, p.deleteRequests)
-				p.logger.Info("Add DeleteWorker",
+				p.logger.Debug("Add DeleteWorker",
 					"ID", atomic.LoadInt32(&p.activeWorkers))
 			}
 		}
 	}
 }
 
+// Stop останавливает WorkerPool
 func (p *DeletePool) Stop() {
 	if p.cancel != nil {
 		p.cancel()
@@ -77,7 +88,7 @@ func (p *DeletePool) Stop() {
 	p.wg.Wait()
 }
 
-func (p *DeletePool) worker(ctx context.Context, id int, requests <-chan *model.DeleteRequest) {
+func (p *DeletePool) worker(ctx context.Context, id int, requests <-chan model.DeleteRequest) {
 	defer func() {
 		p.wg.Done()
 		atomic.AddInt32(&p.activeWorkers, -1)
@@ -93,7 +104,7 @@ func (p *DeletePool) worker(ctx context.Context, id int, requests <-chan *model.
 			}
 			for _, uuid := range req.UUIDs {
 				select {
-				case p.inputCh <- &model.URLUserRequest{
+				case p.inputCh <- model.URLUserRequest{
 					UUID:   uuid,
 					UserID: req.UserID,
 				}:
@@ -107,7 +118,8 @@ func (p *DeletePool) worker(ctx context.Context, id int, requests <-chan *model.
 	}
 }
 
-func (p *DeletePool) AddRequest(req *model.DeleteRequest) {
+// AddRequest добавляет запрос на удаление в очередь обработки.
+func (p *DeletePool) AddRequest(req model.DeleteRequest) {
 	p.deleteRequests <- req
 }
 
@@ -147,7 +159,8 @@ func (p *DeletePool) flushBuffer(ctx context.Context) {
 		p.processBatch(ctx, batch)
 	}
 }
-func (p *DeletePool) addToBuffer(ctx context.Context, task *model.URLUserRequest) {
+
+func (p *DeletePool) addToBuffer(ctx context.Context, task model.URLUserRequest) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 

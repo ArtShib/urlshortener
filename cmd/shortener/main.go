@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,33 +9,53 @@ import (
 
 	"github.com/ArtShib/urlshortener/internal/app"
 	"github.com/ArtShib/urlshortener/internal/config"
+	myLogger "github.com/ArtShib/urlshortener/internal/lib/logger"
 	"github.com/ArtShib/urlshortener/internal/repository"
 )
 
 func main() {
-	cfg := config.MustLoadConfig()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	const op = "main"
+	var err error
+	logger := myLogger.NewLogger()
+	cfg, err := config.MustLoadConfig()
+	if err != nil {
+		logger.Error(op, "error", err)
+	}
+	initCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var repo repository.URLRepository
-	var err error
+	var urlRepo repository.URLRepository
+
 	if cfg.RepoConfig.DatabaseDSN != "" {
-		repo, err = repository.NewRepository(ctx, "db", cfg.RepoConfig.DatabaseDSN)
+		urlRepo, err = repository.NewURLRepository(initCtx, "db", cfg.RepoConfig.DatabaseDSN, logger)
 	} else {
-		repo, err = repository.NewRepository(ctx, "file", cfg.RepoConfig.FileStoragePath)
+		urlRepo, err = repository.NewURLRepository(initCtx, "file", cfg.RepoConfig.FileStoragePath, logger)
 	}
 	if err != nil && !os.IsNotExist(err) {
-		log.Fatal(err.Error())
+		logger.Error(op, "error", err)
+		os.Exit(0)
 	}
 
-	app := app.NewApp(ctx, cfg, &repo)
+	eventRepo, err := repository.NewEventRepository(cfg.AuditConfig.AuditFile, cfg.AuditConfig.AuditURL, logger)
+	if err != nil {
+		logger.Error(op, "error", err)
+	}
+	application := app.NewApp(context.Background(), cfg, &urlRepo, &eventRepo, logger)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
-	go app.Run()
+	errCh := application.Run()
 
-	<-quit
+	select {
+	case err := <-errCh:
+		logger.Error(op, "error", err)
+		os.Exit(0)
+	case <-quit:
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
 
-	app.Stop(ctx)
+		if err := application.Stop(shutdownCtx); err != nil {
+			logger.Error(op, "shutdown error", err)
+		}
+	}
 }

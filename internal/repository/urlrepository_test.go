@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 )
 
 func TestRepo(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Second)
 	defer cancel()
 	tests := []struct {
@@ -28,7 +31,7 @@ func TestRepo(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			repo, _ := NewRepository(ctx, "file", "test.json")
+			repo, _ := NewURLRepository(ctx, "file", "test.json", logger)
 			_, err := repo.Save(ctx, &test.url)
 			if err != nil {
 				assert.Errorf(t, err, "Error add")
