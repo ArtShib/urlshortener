@@ -82,7 +82,7 @@ func (a *App) Run() <-chan error {
 func (a *App) Stop(ctx context.Context) error {
 	logHelper := loghelper.New(a.Logger, "app.Stop")
 	a.WPoolDelete.Stop()
-	if a.WPoolEvent != nil {
+	if a.EventRepo != nil {
 		a.WPoolEvent.Stop()
 	}
 	errRepo := a.URLRepo.Close()

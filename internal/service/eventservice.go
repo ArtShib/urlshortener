@@ -47,7 +47,6 @@ func (s *EventService) Close() error {
 	ctx := context.Background()
 	log := loghelper.New(s.logger, "EventService.Close")
 	log.LogDebug(ctx, "start EventService.Close")
-
 	if s.eventRepository != nil {
 		if err := s.eventRepository.Close(); err != nil {
 			return log.LogAndReturnError(ctx, "EventService.Close", err)
