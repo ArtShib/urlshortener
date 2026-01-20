@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,18 +11,33 @@ import (
 	"github.com/ArtShib/urlshortener/internal/app"
 	"github.com/ArtShib/urlshortener/internal/config"
 	myLogger "github.com/ArtShib/urlshortener/internal/lib/logger"
+	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/repository"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 func main() {
-	const op = "main"
+
+	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
+
+	//const op = "main"
 	var err error
 	logger := myLogger.NewLogger()
+	logHelper := loghelper.New(logger, "main")
+
+	ctx := context.Background()
+
 	cfg, err := config.MustLoadConfig()
 	if err != nil {
-		logger.Error(op, "error", err)
+		logHelper.LogError(ctx, "run MustLoadConfig", err)
 	}
-	initCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	initCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	var urlRepo repository.URLRepository
@@ -32,15 +48,15 @@ func main() {
 		urlRepo, err = repository.NewURLRepository(initCtx, "file", cfg.RepoConfig.FileStoragePath, logger)
 	}
 	if err != nil && !os.IsNotExist(err) {
-		logger.Error(op, "error", err)
-		os.Exit(0)
+		logHelper.LogErrorAndExit(initCtx, "init repository", err)
 	}
 
 	eventRepo, err := repository.NewEventRepository(cfg.AuditConfig.AuditFile, cfg.AuditConfig.AuditURL, logger)
 	if err != nil {
-		logger.Error(op, "error", err)
+		logHelper.LogError(ctx, "init event repository", err)
 	}
-	application := app.NewApp(context.Background(), cfg, &urlRepo, &eventRepo, logger)
+
+	application := app.NewApp(ctx, cfg, &urlRepo, &eventRepo, logger)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
@@ -48,14 +64,13 @@ func main() {
 
 	select {
 	case err := <-errCh:
-		logger.Error(op, "error", err)
-		os.Exit(0)
+		logHelper.LogErrorAndExit(initCtx, "run application", err)
 	case <-quit:
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 10*time.Second)
 		defer shutdownCancel()
 
 		if err := application.Stop(shutdownCtx); err != nil {
-			logger.Error(op, "shutdown error", err)
+			logHelper.LogError(shutdownCtx, "application shutdown error", err)
 		}
 	}
 }

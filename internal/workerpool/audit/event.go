@@ -144,8 +144,6 @@ func (p *WorkerPoolEvent) worker(ctx context.Context, id int) {
 }
 
 func (p *WorkerPoolEvent) processEvent(ctx context.Context, event *model.Event, id int, log *slog.Logger) {
-	//pCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	//defer cancel()
 	if err := p.EventService.SendAuditRecord(ctx, event); err != nil {
 		log.Error("Error adding audit record",
 			"error", err,

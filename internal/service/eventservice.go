@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
@@ -22,13 +23,10 @@ type EventService struct {
 
 // NewEventService констструктор сервиса аудита
 func NewEventService(eventRepository EventRepository, logger *slog.Logger) (*EventService, error) {
-	const op = "EventService.NewEventService"
-	log := logger.With(
-		slog.String("op", op),
-	)
+	log := loghelper.New(logger, "EventService.NewEventService")
+
 	if eventRepository == nil {
-		log.Error(op, "error", fmt.Errorf("audit file and url is empty"))
-		return nil, fmt.Errorf("%s: %w", op, fmt.Errorf("audit file and url is empty"))
+		return nil, log.LogAndReturnError(context.Background(), "EventService.NewEventService", fmt.Errorf("audit file and url is empty"))
 	}
 	return &EventService{
 		eventRepository: eventRepository,
@@ -38,25 +36,21 @@ func NewEventService(eventRepository EventRepository, logger *slog.Logger) (*Eve
 
 // SendAuditRecord сохранение сообщения аудита
 func (s *EventService) SendAuditRecord(ctx context.Context, record *model.Event) error {
-	const op = "EventService.SendAuditRecord"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
-	log.Debug("start EventService.SendAuditRecord")
+	log := loghelper.New(s.logger, "EventService.SendAuditRecord")
+
+	log.LogDebug(ctx, "start EventService.SendAuditRecord")
 	return s.eventRepository.SendAuditRecord(ctx, record)
 }
 
 // Close закрытие репозитория куда сохраняются сообщения аудита
 func (s *EventService) Close() error {
-	const op = "EventService.Close"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
-	log.Debug("start EventService.Close")
+	ctx := context.Background()
+	log := loghelper.New(s.logger, "EventService.Close")
+	log.LogDebug(ctx, "start EventService.Close")
+
 	if s.eventRepository != nil {
 		if err := s.eventRepository.Close(); err != nil {
-			s.logger.Error(op, "error", err)
-			return fmt.Errorf("%s: %w", op, err)
+			return log.LogAndReturnError(ctx, "EventService.Close", err)
 		}
 	}
 	return nil
