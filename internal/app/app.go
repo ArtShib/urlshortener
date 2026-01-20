@@ -50,11 +50,13 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 	app.EventService, err = service.NewEventService(app.EventRepo, app.Logger)
 	if err != nil {
 		logHelper.LogError(ctx, "run service.NewEventService", err)
-	}
-	app.WPoolEvent = audit.New(app.EventService, app.Logger, cfg.Concurrency.WorkerPoolEvent)
-	if err == nil {
+	} else {
+		app.WPoolEvent = audit.New(app.EventService, app.Logger, cfg.Concurrency.WorkerPoolEvent)
 		app.WPoolEvent.Start(ctx)
 	}
+	//if err == nil {
+	//	app.WPoolEvent.Start(ctx)
+	//}
 	app.Server = &http.Server{
 		Addr:    app.Config.HTTPServer.ServerAddress,
 		Handler: httpserver.NewRouter(app.URLService, app.Logger, app.Auth, app.WPoolDelete, app.WPoolEvent),
@@ -82,7 +84,9 @@ func (a *App) Run() <-chan error {
 func (a *App) Stop(ctx context.Context) error {
 	logHelper := loghelper.New(a.Logger, "app.Stop")
 	a.WPoolDelete.Stop()
-	a.WPoolEvent.Stop()
+	if a.WPoolEvent != nil {
+		a.WPoolEvent.Stop()
+	}
 	errRepo := a.URLRepo.Close()
 	errServer := a.Server.Shutdown(ctx)
 

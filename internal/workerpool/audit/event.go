@@ -26,7 +26,7 @@ type WorkerPoolEvent struct {
 	eventCh       chan *model.Event
 	activeWorkers atomic.Int32
 	workerID      atomic.Int32
-	EventService  EventService
+	eventService  EventService
 	config        *model.WorkerPoolEvent
 	stopped       atomic.Bool
 }
@@ -36,7 +36,7 @@ func New(svc EventService, log *slog.Logger, cfg *model.WorkerPoolEvent) *Worker
 	return &WorkerPoolEvent{
 		logger:       log,
 		eventCh:      make(chan *model.Event, cfg.EventChainSize),
-		EventService: svc,
+		eventService: svc,
 		config:       cfg,
 	}
 }
@@ -100,8 +100,8 @@ func (p *WorkerPoolEvent) Stop() {
 		}
 
 		p.wg.Wait()
-		if p.EventService != nil {
-			if err := p.EventService.Close(); err != nil {
+		if p.eventService != nil {
+			if err := p.eventService.Close(); err != nil {
 				log.Error("EventService.Close", "error", err)
 			}
 		}
@@ -123,12 +123,6 @@ func (p *WorkerPoolEvent) worker(ctx context.Context, id int) {
 	for {
 		select {
 		case <-ctx.Done():
-			//return
-			//case event, ok := <-p.eventCh:
-			//	if !ok {
-			//		return
-			//	}
-			//	p.processEvent(ctx, event, id, log)
 			for {
 				select {
 				case event := <-p.eventCh:
@@ -144,7 +138,7 @@ func (p *WorkerPoolEvent) worker(ctx context.Context, id int) {
 }
 
 func (p *WorkerPoolEvent) processEvent(ctx context.Context, event *model.Event, id int, log *slog.Logger) {
-	if err := p.EventService.SendAuditRecord(ctx, event); err != nil {
+	if err := p.eventService.SendAuditRecord(ctx, event); err != nil {
 		log.Error("Error adding audit record",
 			"error", err,
 			"worker_id", id)
