@@ -50,7 +50,7 @@ func (c *Config) LoadConfigFlag() {
 		flag.StringVar(&c.RepoConfig.FileStoragePath, "f", "", "File storage path")
 	}
 	if c.RepoConfig.DatabaseDSN == "" {
-		flag.StringVar(&c.RepoConfig.DatabaseDSN, "d", "host=localhost port=5432 user=postgres password=mysecretpassword dbname=postgres sslmode=disable", "DataBase connection string")
+		flag.StringVar(&c.RepoConfig.DatabaseDSN, "d", "", "DataBase connection string")
 	}
 	if c.AuditConfig.AuditFile == "" {
 		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "", "Audit file path") ///home/artem/GolandProjects/urlshortener/storage/audit.json
