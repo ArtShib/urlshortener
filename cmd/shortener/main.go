@@ -25,7 +25,6 @@ func main() {
 
 	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
 
-	//const op = "main"
 	var err error
 	logger := myLogger.NewLogger()
 	logHelper := loghelper.New(logger, "main")

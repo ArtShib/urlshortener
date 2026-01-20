@@ -39,6 +39,7 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 		Config:    cfg,
 		URLRepo:   *repo,
 		EventRepo: *eventRepo,
+		Logger:    log,
 	}
 	shortSvc := shortener.NewShortener()
 	app.URLService = service.NewURLService(app.URLRepo, cfg.ShortService, shortSvc, app.Logger)
