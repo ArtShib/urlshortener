@@ -53,7 +53,7 @@ func (c *Config) LoadConfigFlag() {
 		flag.StringVar(&c.RepoConfig.DatabaseDSN, "d", "", "DataBase connection string")
 	}
 	if c.AuditConfig.AuditFile == "" {
-		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "", "Audit file path") ///home/artem/GolandProjects/urlshortener/storage/audit.json
+		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "", "Audit file path")
 	}
 	if c.AuditConfig.AuditURL == "" {
 		flag.StringVar(&c.AuditConfig.AuditURL, "AUDIT_URL", "", "URL to audit")

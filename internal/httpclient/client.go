@@ -40,6 +40,7 @@ func New(log *slog.Logger, auditURL string) *Client {
 // SendAuditRecord отправка записи аудита на удаленный http сервер
 func (c *Client) SendAuditRecord(ctx context.Context, record *model.Event) error {
 	const op = "Client.SendEventRecord"
+
 	log := c.log.With(
 		slog.String("op", op),
 	)

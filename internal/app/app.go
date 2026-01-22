@@ -3,13 +3,13 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/ArtShib/urlshortener/internal/config"
 	"github.com/ArtShib/urlshortener/internal/httpserver"
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
+	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
 	"github.com/ArtShib/urlshortener/internal/repository"
 	"github.com/ArtShib/urlshortener/internal/service"
@@ -33,7 +33,8 @@ type App struct {
 
 // NewApp конструктор App
 func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLRepository, eventRepo *repository.EventRepository, log *slog.Logger) *App {
-	const op = "app.NewApp"
+
+	logHelper := loghelper.New(log, "app.NewApp")
 	app := &App{
 		Config:    cfg,
 		URLRepo:   *repo,
@@ -48,7 +49,7 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 	var err error
 	app.EventService, err = service.NewEventService(app.EventRepo, app.Logger)
 	if err != nil {
-		log.Error(op, "error", fmt.Errorf("%s: %w", op, err))
+		logHelper.LogError(ctx, "run service.NewEventService", err)
 	}
 	app.WPoolEvent = audit.New(app.EventService, app.Logger, cfg.Concurrency.WorkerPoolEvent)
 	if err == nil {
@@ -63,11 +64,12 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 
 // Run закпуск http сервера
 func (a *App) Run() <-chan error {
+	logHelper := loghelper.New(a.Logger, "app.Run")
 	errCh := make(chan error, 1)
 
 	go func() {
 		if err := a.Server.ListenAndServe(); err != nil {
-			a.Logger.Error(err.Error())
+			logHelper.LogError(context.Background(), "http server listen error", err)
 			errCh <- err
 		}
 		close(errCh)
@@ -78,13 +80,17 @@ func (a *App) Run() <-chan error {
 
 // Stop остановка сервисов для реализации graceful shutdown
 func (a *App) Stop(ctx context.Context) error {
+	logHelper := loghelper.New(a.Logger, "app.Stop")
 	a.WPoolDelete.Stop()
-	a.WPoolEvent.Stop()
+	if a.EventRepo != nil {
+		a.WPoolEvent.Stop()
+	}
 	errRepo := a.URLRepo.Close()
 	errServer := a.Server.Shutdown(ctx)
 
 	if err := errors.Join(errRepo, errServer); err != nil {
-		return err // fmt.Errorf("failed to stop app gracefully: %w", err)
+
+		return logHelper.LogAndReturnError(ctx, "ailed to stop app gracefully", err)
 	}
 
 	return nil

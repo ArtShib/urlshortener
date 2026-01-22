@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/model"
 )
 
@@ -49,19 +50,16 @@ func NewURLService(repo URLRepository, cfg *model.ShortServiceConfig, shortener 
 
 // Shorten метод сервисного слоя, сокращения url
 func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
-	const op = "URLService.Shorten"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
+	log := loghelper.New(s.logger, "URLService.Shorten")
 	if url == "" {
-		log.Error(op, "error", fmt.Errorf("empty URL"))
-		return "", fmt.Errorf("%s: %w", op, fmt.Errorf("empty URL"))
+		return "", log.LogAndReturnError(ctx, "empty URL", fmt.Errorf("empty URL"))
 	}
 
 	uuid, err := s.shortener.GenerateUUID()
 	if err != nil {
-		log.Error(op, "error", err)
-		return "", fmt.Errorf("%s: %w", op, err)
+		//log.Error(op, "error", err)
+		//return "", fmt.Errorf("%s: %w", op, err)
+		return "", log.LogAndReturnError(ctx, "error shortener.GenerateUUID", err)
 	}
 	shortURL := s.config.BaseURL
 
@@ -81,27 +79,28 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 
 	urlModel, err = s.repo.Save(ctx, urlModel)
 	if err != nil {
-		log.Error(op, "error", err)
+		log.LogError(ctx, "error func repo.Save", err, slog.String("OriginalURL", urlModel.OriginalURL))
+
 	}
 	return urlModel.ShortURL, err
 }
 
 // GetID метод сервисного слоя, получения оригинального url
 func (s *URLService) GetID(ctx context.Context, shortCode string) (*model.URL, error) {
-	const op = "URLService.GetID"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
+
+	log := loghelper.New(s.logger, "URLService.GetID")
 
 	if shortCode == "" {
-		log.Error(op, "error", fmt.Errorf("empty short code"))
-		return nil, fmt.Errorf("%s: %w", op, fmt.Errorf("empty short code"))
+		//log.Error(op, "error", fmt.Errorf("empty short code"))
+		//return nil, fmt.Errorf("%s: %w", op, fmt.Errorf("empty short code"))
+		return nil, log.LogAndReturnError(ctx, "empty short code", fmt.Errorf("empty short code"))
 	}
 
 	url, err := s.repo.Get(ctx, shortCode)
 	if err != nil {
-		log.Error(op, "error", err)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		//log.Error(op, "error", err)
+		//return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, log.LogAndReturnError(ctx, "error repo.Get", err)
 	}
 
 	return url, nil
@@ -109,20 +108,15 @@ func (s *URLService) GetID(ctx context.Context, shortCode string) (*model.URL, e
 
 // ShortenJSON метод сервисного слоя, сокращение url. На вход подается json
 func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.ResponseShortener, error) {
-	const op = "URLService.ShortenJSON"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
+	log := loghelper.New(s.logger, "URLService.ShortenJSON")
 
 	if url == "" {
-		log.Error(op, "error", fmt.Errorf("empty URL"))
-		return nil, fmt.Errorf("%s: %w", op, fmt.Errorf("empty URL"))
+		return nil, log.LogAndReturnError(ctx, "empty URL", fmt.Errorf("empty URL"))
 	}
 
 	uuid, err := s.shortener.GenerateUUID()
 	if err != nil {
-		log.Error(op, "error", err)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, log.LogAndReturnError(ctx, "error shortener.GenerateUUID", err)
 	}
 
 	shortURL := s.config.BaseURL
@@ -134,8 +128,7 @@ func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.Respon
 
 	urlModel, err = s.repo.Save(ctx, urlModel)
 	if err != nil {
-		log.Error(op, "error", err)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, log.LogAndReturnError(ctx, "error repo.Save", err)
 	}
 
 	return &model.ResponseShortener{
@@ -150,18 +143,14 @@ func (s *URLService) Ping(ctx context.Context) error {
 
 // ShortenJSONBatch метод сервисного слоя сокращение url пачками
 func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error) {
-	const op = "URLService.ShortenJSONBatch"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
+	log := loghelper.New(s.logger, "URLService.ShortenJSONBatch")
 
 	var shortenerBatch model.ResponseShortenerBatchArray
 
 	for _, url := range urls {
 		uuid, err := s.shortener.GenerateUUID()
 		if err != nil {
-			log.Error(op, "error", err)
-			return nil, fmt.Errorf("%s: %w", op, err)
+			return nil, log.LogAndReturnError(ctx, "error shortener.GenerateUUID", err)
 		}
 		shortURL := s.config.BaseURL
 		urlModel := &model.URL{
@@ -171,8 +160,7 @@ func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestSho
 		}
 
 		if _, err := s.repo.Save(ctx, urlModel); err != nil {
-			log.Error(op, "error", err)
-			return nil, fmt.Errorf("%s: %w", op, err)
+			return nil, log.LogAndReturnError(ctx, "error repo.Save", err)
 		}
 		shortenerBatch = append(shortenerBatch, model.ResponseShortenerBatch{
 			CorrelationID: url.CorrelationID,
@@ -184,27 +172,21 @@ func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestSho
 
 // GetJSONBatch метод сервисного слоя, получения оригинального url по id пользователя
 func (s *URLService) GetJSONBatch(ctx context.Context, userID string) (model.URLUserBatch, error) {
-	const op = "URLService.GetJSONBatch"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
+	log := loghelper.New(s.logger, "URLService.GetJSONBatch")
+
 	UURLUserBatch, err := s.repo.GetBatch(ctx, userID)
 	if err != nil {
-		log.Error(op, "error", err)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, log.LogAndReturnError(ctx, "error repo.GetBatch", err)
 	}
 	return UURLUserBatch, nil
 }
 
 // DeleteBatch метод сервисного слоя, удаления записи (соотношения uuid ( - оригинального url) из репозитория
 func (s *URLService) DeleteBatch(ctx context.Context, batch model.URLUserRequestArray) error {
-	const op = "URLService.DeleteBatch"
-	log := s.logger.With(
-		slog.String("op", op),
-	)
+	log := loghelper.New(s.logger, "URLService.DeleteBatch")
+
 	if err := s.repo.DeleteBatch(ctx, batch); err != nil {
-		log.Error(op, "error", err)
-		return fmt.Errorf("%s: %w", op, err)
+		return log.LogAndReturnError(ctx, "error repo.DeleteBatch", err)
 	}
 	return nil
 }
