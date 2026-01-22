@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 )
 
 // OpLogger структурв для loghelper
@@ -40,10 +39,4 @@ func (o *OpLogger) LogAndReturnError(ctx context.Context, msg string, err error,
 // LogError логирование LevelError
 func (o *OpLogger) LogError(ctx context.Context, msg string, err error, attrs ...slog.Attr) {
 	o.logger.LogAttrs(ctx, slog.LevelError, msg, append(attrs, slog.String("error", err.Error()))...)
-}
-
-// LogErrorAndExit логирование LevelError и выход из программы
-func (o *OpLogger) LogErrorAndExit(ctx context.Context, msg string, err error, attrs ...slog.Attr) {
-	o.logger.LogAttrs(ctx, slog.LevelError, msg, append(attrs, slog.String("error", err.Error()))...)
-	os.Exit(1)
 }
