@@ -2,6 +2,7 @@ package exit
 
 import "os"
 
+// типы с которыми приложение может завершать работу
 const (
 	ExitSuccess      = 0
 	ExitRepoError    = 1
