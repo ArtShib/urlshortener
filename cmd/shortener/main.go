@@ -10,6 +10,7 @@ import (
 
 	"github.com/ArtShib/urlshortener/internal/app"
 	"github.com/ArtShib/urlshortener/internal/config"
+	"github.com/ArtShib/urlshortener/internal/lib/exit"
 	myLogger "github.com/ArtShib/urlshortener/internal/lib/logger"
 	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/repository"
@@ -36,18 +37,19 @@ func main() {
 		logHelper.LogError(ctx, "run MustLoadConfig", err)
 	}
 
-	initCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	initRepoCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	var urlRepo repository.URLRepository
 
 	if cfg.RepoConfig.DatabaseDSN != "" {
-		urlRepo, err = repository.NewURLRepository(initCtx, "db", cfg.RepoConfig.DatabaseDSN, logger)
+		urlRepo, err = repository.NewURLRepository(initRepoCtx, "db", cfg.RepoConfig.DatabaseDSN, logger)
 	} else {
-		urlRepo, err = repository.NewURLRepository(initCtx, "file", cfg.RepoConfig.FileStoragePath, logger)
+		urlRepo, err = repository.NewURLRepository(initRepoCtx, "file", cfg.RepoConfig.FileStoragePath, logger)
 	}
 	if err != nil && !os.IsNotExist(err) {
-		logHelper.LogErrorAndExit(initCtx, "init repository", err)
+		logHelper.LogError(ctx, "init repository", err)
+		exit.Code(exit.ExitRepoError).Exit()
 	}
 
 	eventRepo, err := repository.NewEventRepository(cfg.AuditConfig.AuditFile, cfg.AuditConfig.AuditURL, logger)
@@ -63,7 +65,8 @@ func main() {
 
 	select {
 	case err := <-errCh:
-		logHelper.LogErrorAndExit(initCtx, "run application", err)
+		logHelper.LogError(ctx, "run application", err)
+		exit.Code(exit.ExitHTTPSrvError).Exit()
 	case <-quit:
 		shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 10*time.Second)
 		defer shutdownCancel()
