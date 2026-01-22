@@ -9,10 +9,10 @@ import (
 // FileConfig структура фалового конфига
 type FileConfig struct {
 	ServerAddress   string `json:"server_address"`
-	BaseUrl         string `json:"base_url"`
+	BaseURL         string `json:"base_url"`
 	FileStoragePath string `json:"file_storage_path"`
 	DatabaseDsn     string `json:"database_dsn"`
-	EnableHttps     bool   `json:"enable_https"`
+	EnableHTTPS     bool   `json:"enable_https"`
 }
 
 // LoadConfigFile загрузка конфига из файла
@@ -40,7 +40,7 @@ func (cfg *FileConfig) LoadConfig(config *Config) {
 		config.HTTPServer.ServerAddress = cfg.ServerAddress
 	}
 	if config.ShortService.BaseURL == "" {
-		config.ShortService.BaseURL = cfg.BaseUrl
+		config.ShortService.BaseURL = cfg.BaseURL
 	}
 	if config.RepoConfig.FileStoragePath == "" {
 		config.RepoConfig.FileStoragePath = cfg.FileStoragePath
@@ -49,6 +49,6 @@ func (cfg *FileConfig) LoadConfig(config *Config) {
 		config.RepoConfig.DatabaseDSN = cfg.DatabaseDsn
 	}
 	if !config.TLSConfig.Enabled {
-		config.TLSConfig.Enabled = cfg.EnableHttps
+		config.TLSConfig.Enabled = cfg.EnableHTTPS
 	}
 }
