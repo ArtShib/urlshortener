@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+// TestCode_Exit проверяет, что вызов Exit() реально завершает процесс с нужным кодом.
 func TestCode_Exit(t *testing.T) {
 	if os.Getenv("TEST_EXIT_CRASHER") == "1" {
 		codeStr := os.Getenv("TEST_EXIT_CODE")
