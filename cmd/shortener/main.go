@@ -32,7 +32,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cfg, err := config.MustLoadConfig()
+	cfg, err := config.MustLoadConfig(ctx, logger)
 	if err != nil {
 		logHelper.LogError(ctx, "run MustLoadConfig", err)
 	}
