@@ -17,7 +17,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -47,8 +46,6 @@ func main() {
 	mychecks = append(mychecks, structtag.Analyzer)
 
 	mychecks = append(mychecks, ExitCheckAnalyzer)
-
-	fmt.Println(mychecks)
 
 	multichecker.Main(
 		mychecks...,

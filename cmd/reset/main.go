@@ -87,7 +87,7 @@ func processPackage(pkg *packages.Package) error {
 	}
 
 	if len(resetStructs) == 0 {
-		//fmt.Println("No reset methods found in package")
+
 		return nil
 	}
 
@@ -124,14 +124,37 @@ func generateResetFile(pkg *packages.Package, structNames []string) error {
 	}
 
 	outputPath := filepath.Join(filepath.Dir(pkg.GoFiles[0]), "reset.gen.go")
-	formatted, err := format.Source(buf.Bytes())
+	formatted, err := formatted(buf.Bytes())
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(outputPath, formatted, 0666)
+	return writeFile(outputPath, formatted)
+}
+
+func formatted(data []byte) ([]byte, error) {
+	return format.Source(data)
+}
+
+func writeFile(path string, data []byte) error {
+	return os.WriteFile(path, data, 0666)
 }
 
 func generateResetMethod(pkg *packages.Package, structName string) (string, error) {
+
+	structType, err := extractStructType(pkg, structName)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString(generateMethodSignature(structName))
+	buf.WriteString(generateFieldResets(structType))
+
+	return buf.String(), nil
+}
+
+func extractStructType(pkg *packages.Package, structName string) (*types.Struct, error) {
+
 	var structObj types.Object
 	for ident, obj := range pkg.TypesInfo.Defs {
 		if ident != nil && ident.Name == structName && obj != nil {
@@ -141,17 +164,17 @@ func generateResetMethod(pkg *packages.Package, structName string) (string, erro
 	}
 
 	if structObj == nil {
-		return "", errors.New("struct not found: " + structName)
+		return nil, errors.New("struct not found: " + structName)
 	}
 
 	typeName, ok := structObj.(*types.TypeName)
 	if !ok {
-		return "", errors.New("not TypeName: " + structName)
+		return nil, errors.New("not TypeName: " + structName)
 	}
 
 	named, ok := typeName.Type().(*types.Named)
 	if !ok {
-		return "", errors.New("not Named type: " + structName)
+		return nil, errors.New("not Named type: " + structName)
 	}
 
 	var structType *types.Struct
@@ -161,10 +184,16 @@ func generateResetMethod(pkg *packages.Package, structName string) (string, erro
 	} else {
 		structType = underlying.Underlying().(*types.Struct)
 	}
+	return structType, nil
+}
 
-	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "// %s resets %s to zero values.\nfunc (r *%s) Reset() {\n\tif r == nil {\n\t\treturn\n\t}\n",
+func generateMethodSignature(structName string) string {
+	return fmt.Sprintf("// %s resets %s to zero values.\nfunc (r *%s) Reset() {\n\tif r == nil {\n\t\treturn\n\t}\n",
 		structName, structName, structName)
+}
+
+func generateFieldResets(structType *types.Struct) string {
+	var buf bytes.Buffer
 
 	for i := 0; i < structType.NumFields(); i++ {
 		field := structType.Field(i)
@@ -189,7 +218,8 @@ func generateResetMethod(pkg *packages.Package, structName string) (string, erro
 	}
 
 	fmt.Fprintf(&buf, "}\n\n")
-	return buf.String(), nil
+
+	return buf.String()
 }
 
 func basicReset(fieldName string, basic *types.Basic) string {
