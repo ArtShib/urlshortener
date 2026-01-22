@@ -70,7 +70,7 @@ func (c *Config) LoadConfigFlag() {
 	if c.AuditConfig.AuditURL == "" {
 		flag.StringVar(&c.AuditConfig.AuditURL, "AUDIT_URL", "", "URL to audit")
 	}
-	if c.TLSConfig.Enabled == false {
+	if !c.TLSConfig.Enabled {
 		flag.BoolVar(&c.TLSConfig.Enabled, "s", false, "Enable TLS")
 	}
 	if c.ConfigFile.Path == "" {
