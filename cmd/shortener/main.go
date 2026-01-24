@@ -61,7 +61,7 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
-	errCh := application.Run()
+	errCh := application.Run(ctx)
 
 	select {
 	case err := <-errCh:

@@ -60,12 +60,11 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 }
 
 // Run закпуск http сервера
-func (a *App) Run() <-chan error {
+func (a *App) Run(ctx context.Context) <-chan error {
 
 	errCh := make(chan error, 1)
 
 	go func() {
-		ctx := context.Background()
 		err := a.Server.Start(ctx, a.Config.TLSConfig, a.Logger)
 		if err != nil {
 			errCh <- err

@@ -76,9 +76,6 @@ func (c *Config) LoadConfigFlag() {
 	if c.ConfigFile.Path == "" {
 		flag.StringVar(&c.ConfigFile.Path, "c", "", "Configuration file path")
 	}
-	if c.ConfigFile.Path == "" {
-		flag.StringVar(&c.ConfigFile.Path, "config", "", "Configuration file path")
-	}
 
 	flag.Parse()
 }
