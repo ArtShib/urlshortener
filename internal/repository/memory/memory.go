@@ -148,3 +148,8 @@ func (r *MemoryRepository) GetBatch(ctx context.Context, userID string) (model.U
 func (r *MemoryRepository) DeleteBatch(ctx context.Context, ddeleteRequest model.URLUserRequestArray) error {
 	return nil
 }
+
+// Stats метод для получения статистики
+func (r *MemoryRepository) Stats(ctx context.Context) (*model.Stats, error) {
+	return nil, nil
+}

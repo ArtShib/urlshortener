@@ -14,14 +14,15 @@ import (
 
 // Config структура конфига
 type Config struct {
-	HTTPServer   *model.HTTPServerConfig
-	ShortService *model.ShortServiceConfig
-	RepoConfig   *model.RepositoryConfig
-	Concurrency  *model.Concurrency
-	AuditConfig  *model.AuditConfig
-	TLSConfig    *model.TLSConfig
-	ConfigFile   *model.ConfigFile
-	logger       *slog.Logger
+	HTTPServer    *model.HTTPServerConfig
+	ShortService  *model.ShortServiceConfig
+	RepoConfig    *model.RepositoryConfig
+	Concurrency   *model.Concurrency
+	AuditConfig   *model.AuditConfig
+	TLSConfig     *model.TLSConfig
+	ConfigFile    *model.ConfigFile
+	TrustedSubnet *model.ConfigTrustedSubnet
+	logger        *slog.Logger
 }
 
 // LoadConfigEnv загрузка данных в конфиг из env
@@ -45,6 +46,9 @@ func (c *Config) LoadConfigEnv() error {
 		return err
 	}
 	if err := env.Parse(c.ConfigFile); err != nil {
+		return err
+	}
+	if err := env.Parse(c.TrustedSubnet); err != nil {
 		return err
 	}
 	return nil
@@ -75,6 +79,9 @@ func (c *Config) LoadConfigFlag() {
 	}
 	if c.ConfigFile.Path == "" {
 		flag.StringVar(&c.ConfigFile.Path, "c", "", "Configuration file path")
+	}
+	if c.TrustedSubnet.Subnet == "" {
+		flag.StringVar(&c.TrustedSubnet.Subnet, "t", "", "Trusted subnet")
 	}
 
 	flag.Parse()
@@ -108,7 +115,8 @@ func MustLoadConfig(ctx context.Context, logger *slog.Logger) (*Config, error) {
 			Cert: "cert/cert.pem",
 			Key:  "cert/key.pem",
 		},
-		ConfigFile: &model.ConfigFile{},
+		ConfigFile:    &model.ConfigFile{},
+		TrustedSubnet: &model.ConfigTrustedSubnet{},
 	}
 
 	err = cfg.LoadConfigEnv()

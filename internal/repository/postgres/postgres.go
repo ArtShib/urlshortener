@@ -213,3 +213,24 @@ func (p *RepositoryPostgres) DeleteBatch(ctx context.Context, deleteRequest mode
 
 	return nil
 }
+
+// Stats метод для получения статистики
+func (p *RepositoryPostgres) Stats(ctx context.Context) (*model.Stats, error) {
+	const op = "postgres.Stats"
+	logger := p.logger.With(
+		slog.String("op", op),
+	)
+	stmt, err := p.db.Prepare(`select count(distinct uuid) as count_urls, count(distinct user_id) as count_users from a_url_short`)
+	if err != nil {
+		logger.Error(op, "error", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	row := stmt.QueryRowContext(ctx)
+	var stats model.Stats
+	if err := row.Scan(&stats.CountURLs, &stats.CountUsers); err != nil {
+		logger.Error(op, "error", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &stats, nil
+}

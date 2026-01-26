@@ -26,6 +26,9 @@ func (m *mockURLRepo) GetBatch(ctx context.Context, userID string) (model.URLUse
 func (m *mockURLRepo) DeleteBatch(ctx context.Context, deleteRequest model.URLUserRequestArray) error {
 	return nil
 }
+func (m *mockURLRepo) Stats(ctx context.Context) (*model.Stats, error) {
+	return &model.Stats{CountURLs: 20, CountUsers: 10}, nil
+}
 
 type mockShortener struct{}
 

@@ -4,6 +4,13 @@ import (
 	"errors"
 )
 
+// ErrURLConflict кастомная ошибка "URL already exists"
+var (
+	ErrSubnetIsEmpty   = errors.New("subnet is empty")
+	ErrInvalidIPFormat = errors.New("invalid client IP format")
+	ErrURLConflict     = errors.New("URL already exists")
+)
+
 // URL
 type URL struct {
 	UUID        string `json:"uuid"`
@@ -45,9 +52,6 @@ type ResponseShortenerBatch struct {
 	ShortURL      string `json:"short_url"`
 }
 
-// ErrURLConflict кастомная ошибка "URL already exists"
-var ErrURLConflict = errors.New("URL already exists")
-
 // URLUser структура для ответа в json
 type URLUser struct {
 	ShortURL    string `json:"short_url"`
@@ -78,4 +82,9 @@ type URLUserRequestArray []URLUserRequest
 type DeleteRequest struct {
 	UUIDs  []string `json:"uuids"`
 	UserID string   `json:"user_id"`
+}
+
+type Stats struct {
+	CountURLs  int `json:"urls"`
+	CountUsers int `json:"users"`
 }

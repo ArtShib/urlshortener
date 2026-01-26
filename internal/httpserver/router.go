@@ -12,8 +12,10 @@ import (
 	"github.com/ArtShib/urlshortener/internal/httpserver/handlers/shorten"
 	"github.com/ArtShib/urlshortener/internal/httpserver/handlers/shortenjson"
 	"github.com/ArtShib/urlshortener/internal/httpserver/handlers/shortenjsonbatch"
+	"github.com/ArtShib/urlshortener/internal/httpserver/handlers/stats"
 	customMiddleware "github.com/ArtShib/urlshortener/internal/httpserver/middleware"
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
+	"github.com/ArtShib/urlshortener/internal/lib/trustedsubnet"
 	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -27,6 +29,7 @@ type URLService interface {
 	Ping(ctx context.Context) error
 	ShortenJSONBatch(ctx context.Context, urls model.RequestShortenerBatchArray) (model.ResponseShortenerBatchArray, error)
 	GetJSONBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
+	Stats(ctx context.Context) (*model.Stats, error)
 }
 
 // WorkerPoolDelete описывает интерфейс удаления url
@@ -40,7 +43,7 @@ type ServiceEvent interface {
 }
 
 // NewRouter конструктор Router
-func NewRouter(svc URLService, log *slog.Logger, auth *auth.Service, poolDel WorkerPoolDelete, eventSvc ServiceEvent) http.Handler {
+func NewRouter(svc URLService, log *slog.Logger, auth *auth.Service, poolDel WorkerPoolDelete, eventSvc ServiceEvent, trustedSvc *trustedsubnet.TrustedSubnet) http.Handler {
 
 	mux := chi.NewRouter()
 	mux.Use(customMiddleware.Auth(auth, log))
@@ -60,6 +63,10 @@ func NewRouter(svc URLService, log *slog.Logger, auth *auth.Service, poolDel Wor
 		r.Post("/api/shorten", shortenjson.New(log, svc))
 		r.Post("/api/shorten/batch", shortenjsonbatch.New(log, svc))
 		r.Get("/{shortCode}", getid.New(log, svc))
+	})
+	mux.Group(func(r chi.Router) {
+		r.Use(customMiddleware.NewTrusted(trustedSvc))
+		r.Get("/api/internal/stats", stats.New(log, svc))
 	})
 
 	return mux

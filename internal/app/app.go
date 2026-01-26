@@ -11,6 +11,7 @@ import (
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
 	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
+	"github.com/ArtShib/urlshortener/internal/lib/trustedsubnet"
 	"github.com/ArtShib/urlshortener/internal/repository"
 	"github.com/ArtShib/urlshortener/internal/service"
 	"github.com/ArtShib/urlshortener/internal/workerpool/audit"
@@ -55,7 +56,8 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 	if err == nil {
 		app.WPoolEvent.Start(ctx)
 	}
-	app.Server = server.New(app.Config.HTTPServer.ServerAddress, httpserver.NewRouter(app.URLService, app.Logger, app.Auth, app.WPoolDelete, app.WPoolEvent))
+	trusted := trustedsubnet.New(ctx, log, cfg.TrustedSubnet)
+	app.Server = server.New(app.Config.HTTPServer.ServerAddress, httpserver.NewRouter(app.URLService, app.Logger, app.Auth, app.WPoolDelete, app.WPoolEvent, trusted))
 	return app
 }
 

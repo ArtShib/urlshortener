@@ -52,3 +52,7 @@ type TLSConfig struct {
 type ConfigFile struct {
 	Path string `env:"CONFIG"`
 }
+
+type ConfigTrustedSubnet struct {
+	Subnet string `env:"TRUSTED_SUBNET"`
+}

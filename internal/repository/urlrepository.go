@@ -18,6 +18,7 @@ type URLRepository interface {
 	Ping(context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 	DeleteBatch(ctx context.Context, deleteRequest model.URLUserRequestArray) error
+	Stats(ctx context.Context) (*model.Stats, error)
 }
 
 // NewURLRepository конструктор создания репозитория

@@ -21,6 +21,7 @@ type URLRepository interface {
 	Ping(ctx context.Context) error
 	GetBatch(ctx context.Context, userID string) (model.URLUserBatch, error)
 	DeleteBatch(ctx context.Context, deleteRequest model.URLUserRequestArray) error
+	Stats(ctx context.Context) (*model.Stats, error)
 }
 
 // Shortener описывает интерфейс для генерации uuid и ShortURL
@@ -189,4 +190,19 @@ func (s *URLService) DeleteBatch(ctx context.Context, batch model.URLUserRequest
 		return log.LogAndReturnError(ctx, "error repo.DeleteBatch", err)
 	}
 	return nil
+}
+
+// Stats метод для получения статистики
+func (s *URLService) Stats(ctx context.Context) (*model.Stats, error) {
+
+	log := loghelper.New(s.logger, "URLService.Stats")
+
+	stats, err := s.repo.Stats(ctx)
+	if err != nil {
+		//log.Error(op, "error", err)
+		//return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, log.LogAndReturnError(ctx, "error repo.Stats", err)
+	}
+
+	return stats, nil
 }
