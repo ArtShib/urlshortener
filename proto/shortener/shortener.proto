@@ -1,8 +1,17 @@
 edition = "2023";
 
-package proto;
+package urlshortener;
 
-option go_package = "urlshortener/proto";
+option go_package = "github.com/ArtShib/urlshortener/gen/go/shortener;shortener";
+
+import "google/protobuf/empty.proto";
+
+
+service ShortenerService {
+  rpc ShortenURL (URLShortenRequest) returns (URLShortenResponse);
+  rpc ExpandURL (URLExpandRequest) returns (URLExpandResponse);
+  rpc ListUserURLs (google.protobuf.Empty) returns (UserURLsResponse);
+}
 
 message URLShortenRequest {
   string url = 1;
@@ -13,7 +22,7 @@ message URLShortenResponse {
 }
 
 message URLExpandRequest {
-  string id = 1;
+  string id = 1 ;
 }
 
 message URLExpandResponse {
@@ -28,10 +37,4 @@ message UserURLsResponse {
 message URLData {
   string short_url = 1;
   string original_url = 2;
-}
-
-service ShortenerService {
-  rpc ShortenURL (URLShortenRequest) returns (URLShortenResponse);
-  rpc ExpandURL (URLExpandRequest) returns (URLExpandResponse);
-  rpc ListUserURLs (google.protobuf.Empty) returns (UserURLsResponse);
 }
