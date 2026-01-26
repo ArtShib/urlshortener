@@ -1,9 +1,12 @@
 package config
 
 import (
+	"context"
 	"flag"
+	"log/slog"
 	"os"
 
+	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/model"
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
@@ -16,6 +19,9 @@ type Config struct {
 	RepoConfig   *model.RepositoryConfig
 	Concurrency  *model.Concurrency
 	AuditConfig  *model.AuditConfig
+	TLSConfig    *model.TLSConfig
+	ConfigFile   *model.ConfigFile
+	logger       *slog.Logger
 }
 
 // LoadConfigEnv загрузка данных в конфиг из env
@@ -33,6 +39,12 @@ func (c *Config) LoadConfigEnv() error {
 		return err
 	}
 	if err := env.Parse(c.AuditConfig); err != nil {
+		return err
+	}
+	if err := env.Parse(c.TLSConfig); err != nil {
+		return err
+	}
+	if err := env.Parse(c.ConfigFile); err != nil {
 		return err
 	}
 	return nil
@@ -53,17 +65,24 @@ func (c *Config) LoadConfigFlag() {
 		flag.StringVar(&c.RepoConfig.DatabaseDSN, "d", "", "DataBase connection string")
 	}
 	if c.AuditConfig.AuditFile == "" {
-		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "", "Audit file path")
+		flag.StringVar(&c.AuditConfig.AuditFile, "AUDIT_FILE", "/home/artem/GolandProjects/urlshortener/storage/audit.json", "Audit file path")
 	}
 	if c.AuditConfig.AuditURL == "" {
 		flag.StringVar(&c.AuditConfig.AuditURL, "AUDIT_URL", "", "URL to audit")
+	}
+	if !c.TLSConfig.Enabled {
+		flag.BoolVar(&c.TLSConfig.Enabled, "s", false, "Enable TLS")
+	}
+	if c.ConfigFile.Path == "" {
+		flag.StringVar(&c.ConfigFile.Path, "c", "", "Configuration file path")
 	}
 
 	flag.Parse()
 }
 
 // MustLoadConfig конструктор Config
-func MustLoadConfig() (*Config, error) {
+func MustLoadConfig(ctx context.Context, logger *slog.Logger) (*Config, error) {
+	logHelper := loghelper.New(logger, "config.MustLoadConfig")
 	var err error
 	cfg := Config{
 		HTTPServer:   &model.HTTPServerConfig{},
@@ -85,8 +104,25 @@ func MustLoadConfig() (*Config, error) {
 				EventChainSize: 100,
 			},
 		},
+		TLSConfig: &model.TLSConfig{
+			Cert: "cert/cert.pem",
+			Key:  "cert/key.pem",
+		},
+		ConfigFile: &model.ConfigFile{},
 	}
+
 	err = cfg.LoadConfigEnv()
+	if err != nil {
+		logHelper.LogError(ctx, "LoadConfigEnv", err)
+	}
 	cfg.LoadConfigFlag()
+
+	configFile, err := LoadConfigFile(cfg.ConfigFile.Path)
+	if err != nil {
+		logHelper.LogError(ctx, "Error loading config file", err)
+	} else {
+		configFile.LoadConfig(&cfg)
+	}
+
 	return &cfg, err
 }

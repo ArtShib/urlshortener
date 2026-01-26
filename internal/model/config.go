@@ -41,3 +41,14 @@ type AuditConfig struct {
 	AuditFile string `env:"AUDIT_FILE"`
 	AuditURL  string `env:"AUDIT_URL"`
 }
+
+// TLSConfig структура для tls
+type TLSConfig struct {
+	Enabled bool   `env:"ENABLE_HTTPS"`
+	Cert    string `env:"TLS_CERT"`
+	Key     string `env:"TLS_KEY"`
+}
+
+type ConfigFile struct {
+	Path string `env:"CONFIG"`
+}

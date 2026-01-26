@@ -32,7 +32,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cfg, err := config.MustLoadConfig()
+	cfg, err := config.MustLoadConfig(ctx, logger)
 	if err != nil {
 		logHelper.LogError(ctx, "run MustLoadConfig", err)
 	}
@@ -61,7 +61,7 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
-	errCh := application.Run()
+	errCh := application.Run(ctx)
 
 	select {
 	case err := <-errCh:
