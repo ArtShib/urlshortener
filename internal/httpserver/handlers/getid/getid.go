@@ -35,7 +35,7 @@ func New(log *slog.Logger, svc URLService) http.HandlerFunc {
 
 		url, err := svc.GetID(r.Context(), shortCode)
 		if err != nil {
-			log.Error("service GetID", "error", err)
+			log.Error("services GetID", "error", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}

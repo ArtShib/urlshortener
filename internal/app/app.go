@@ -5,9 +5,10 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/ArtShib/urlshortener/internal/app/grpc"
+	"github.com/ArtShib/urlshortener/internal/app/http"
 	"github.com/ArtShib/urlshortener/internal/config"
 	"github.com/ArtShib/urlshortener/internal/httpserver"
-	"github.com/ArtShib/urlshortener/internal/httpserver/server"
 	"github.com/ArtShib/urlshortener/internal/lib/auth"
 	"github.com/ArtShib/urlshortener/internal/lib/loghelper"
 	"github.com/ArtShib/urlshortener/internal/lib/shortener"
@@ -16,6 +17,7 @@ import (
 	"github.com/ArtShib/urlshortener/internal/service"
 	"github.com/ArtShib/urlshortener/internal/workerpool/audit"
 	"github.com/ArtShib/urlshortener/internal/workerpool/requestdeletion"
+	"golang.org/x/sync/errgroup"
 )
 
 // App структура слоя application
@@ -23,13 +25,14 @@ type App struct {
 	Logger       *slog.Logger
 	URLRepo      repository.URLRepository
 	EventRepo    repository.EventRepository
-	Server       *server.ServerHTTP
+	Server       *http.ServerHTTP
 	Config       *config.Config
 	Auth         *auth.Service
 	URLService   *service.URLService
 	EventService *service.EventService
 	WPoolDelete  *requestdeletion.DeletePool
 	WPoolEvent   *audit.WorkerPoolEvent
+	ServerGRPC   *grpc.App
 }
 
 // NewApp конструктор App
@@ -50,31 +53,32 @@ func NewApp(ctx context.Context, cfg *config.Config, repo *repository.URLReposit
 	var err error
 	app.EventService, err = service.NewEventService(app.EventRepo, app.Logger)
 	if err != nil {
-		logHelper.LogError(ctx, "run service.NewEventService", err)
+		logHelper.LogError(ctx, "run services.NewEventService", err)
 	}
 	app.WPoolEvent = audit.New(app.EventService, app.Logger, cfg.Concurrency.WorkerPoolEvent)
 	if err == nil {
 		app.WPoolEvent.Start(ctx)
 	}
 	trusted := trustedsubnet.New(ctx, log, cfg.TrustedSubnet)
-	app.Server = server.New(app.Config.HTTPServer.ServerAddress, httpserver.NewRouter(app.URLService, app.Logger, app.Auth, app.WPoolDelete, app.WPoolEvent, trusted))
+	app.Server = http.New(app.Config.HTTPServer.ServerAddress, httpserver.NewRouter(app.URLService, app.Logger, app.Auth, app.WPoolDelete, app.WPoolEvent, trusted))
+	app.ServerGRPC = grpc.New(log, cfg.ConfigGRPC.Port, app.Auth, app.URLService)
 	return app
 }
 
 // Run закпуск http сервера
-func (a *App) Run(ctx context.Context) <-chan error {
+func (a *App) Run(ctx context.Context) error {
 
-	errCh := make(chan error, 1)
+	gr, ctx := errgroup.WithContext(ctx)
 
-	go func() {
-		err := a.Server.Start(ctx, a.Config.TLSConfig, a.Logger)
-		if err != nil {
-			errCh <- err
-		}
-		close(errCh)
-	}()
+	gr.Go(func() error {
+		return a.Server.Start(ctx, a.Config.TLSConfig, a.Logger)
+	})
 
-	return errCh
+	gr.Go(func() error {
+		return a.ServerGRPC.Start(ctx)
+	})
+
+	return gr.Wait()
 }
 
 // Stop остановка сервисов для реализации graceful shutdown
@@ -85,9 +89,9 @@ func (a *App) Stop(ctx context.Context) error {
 	if a.EventRepo != nil {
 		a.WPoolEvent.Stop()
 	}
+	a.ServerGRPC.Stop(ctx)
 	errRepo := a.URLRepo.Close()
 	if err := errors.Join(errRepo, errServer); err != nil {
-
 		return logHelper.LogAndReturnError(ctx, "failed to stop app gracefully", err)
 	}
 

@@ -2,7 +2,7 @@ edition = "2023";
 
 package urlshortener;
 
-option go_package = "github.com/ArtShib/urlshortener/gen/go/shortener;shortener";
+option go_package = "github.com/ArtShib/urlshortener/gen/go/server;server";
 
 import "google/protobuf/empty.proto";
 

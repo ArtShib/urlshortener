@@ -61,18 +61,17 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
-	errCh := application.Run(ctx)
-
-	select {
-	case err := <-errCh:
-		logHelper.LogError(ctx, "run application", err)
-		exit.Code(exit.ExitHTTPSrvError).Exit()
-	case <-quit:
-		shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 10*time.Second)
-		defer shutdownCancel()
-
-		if err := application.Stop(shutdownCtx); err != nil {
-			logHelper.LogError(shutdownCtx, "application shutdown error", err)
+	go func() {
+		if err = application.Run(ctx); err != nil {
+			logHelper.LogError(ctx, "run application", err)
+			exit.Code(exit.ExitHTTPSrvError).Exit()
 		}
+	}()
+	<-quit
+	shutdownCtx, shutdownCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer shutdownCancel()
+
+	if err := application.Stop(shutdownCtx); err != nil {
+		logHelper.LogError(shutdownCtx, "application shutdown error", err)
 	}
 }

@@ -60,7 +60,7 @@ func (s *URLService) Shorten(ctx context.Context, url string) (string, error) {
 	if err != nil {
 		//log.Error(op, "error", err)
 		//return "", fmt.Errorf("%s: %w", op, err)
-		return "", log.LogAndReturnError(ctx, "error shortener.GenerateUUID", err)
+		return "", log.LogAndReturnError(ctx, "error server.GenerateUUID", err)
 	}
 	shortURL := s.config.BaseURL
 
@@ -117,7 +117,7 @@ func (s *URLService) ShortenJSON(ctx context.Context, url string) (*model.Respon
 
 	uuid, err := s.shortener.GenerateUUID()
 	if err != nil {
-		return nil, log.LogAndReturnError(ctx, "error shortener.GenerateUUID", err)
+		return nil, log.LogAndReturnError(ctx, "error server.GenerateUUID", err)
 	}
 
 	shortURL := s.config.BaseURL
@@ -151,7 +151,7 @@ func (s *URLService) ShortenJSONBatch(ctx context.Context, urls model.RequestSho
 	for _, url := range urls {
 		uuid, err := s.shortener.GenerateUUID()
 		if err != nil {
-			return nil, log.LogAndReturnError(ctx, "error shortener.GenerateUUID", err)
+			return nil, log.LogAndReturnError(ctx, "error server.GenerateUUID", err)
 		}
 		shortURL := s.config.BaseURL
 		urlModel := &model.URL{

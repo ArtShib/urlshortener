@@ -56,3 +56,7 @@ type ConfigFile struct {
 type ConfigTrustedSubnet struct {
 	Subnet string `env:"TRUSTED_SUBNET"`
 }
+
+type ConfigGRPC struct {
+	Port int `env:"PORT"`
+}

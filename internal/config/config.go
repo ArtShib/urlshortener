@@ -22,6 +22,7 @@ type Config struct {
 	TLSConfig     *model.TLSConfig
 	ConfigFile    *model.ConfigFile
 	TrustedSubnet *model.ConfigTrustedSubnet
+	ConfigGRPC    *model.ConfigGRPC
 	logger        *slog.Logger
 }
 
@@ -117,6 +118,9 @@ func MustLoadConfig(ctx context.Context, logger *slog.Logger) (*Config, error) {
 		},
 		ConfigFile:    &model.ConfigFile{},
 		TrustedSubnet: &model.ConfigTrustedSubnet{},
+		ConfigGRPC: &model.ConfigGRPC{
+			Port: 3030,
+		},
 	}
 
 	err = cfg.LoadConfigEnv()

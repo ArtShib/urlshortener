@@ -526,7 +526,7 @@ const file_shortener_shortener_proto_rawDesc = "" +
 	"\n" +
 	"ShortenURL\x12\x1f.urlshortener.URLShortenRequest\x1a .urlshortener.URLShortenResponse\x12L\n" +
 	"\tExpandURL\x12\x1e.urlshortener.URLExpandRequest\x1a\x1f.urlshortener.URLExpandResponse\x12F\n" +
-	"\fListUserURLs\x12\x16.google.protobuf.Empty\x1a\x1e.urlshortener.UserURLsResponseB<Z:github.com/ArtShib/urlshortener/gen/go/shortener;shortenerb\beditionsp\xe8\a"
+	"\fListUserURLs\x12\x16.google.protobuf.Empty\x1a\x1e.urlshortener.UserURLsResponseB6Z4github.com/ArtShib/urlshortener/gen/go/server;serverb\beditionsp\xe8\a"
 
 var file_shortener_shortener_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_shortener_shortener_proto_goTypes = []any{

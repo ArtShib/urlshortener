@@ -44,7 +44,7 @@ func New(log *slog.Logger, svc URLService) http.HandlerFunc {
 
 		responseShortener, err := svc.ShortenJSONBatch(r.Context(), req)
 		if err != nil {
-			log.Error("service ShortenJSONBatch", "error", err)
+			log.Error("services ShortenJSONBatch", "error", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}

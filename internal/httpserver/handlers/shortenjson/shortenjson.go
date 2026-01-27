@@ -45,7 +45,7 @@ func New(log *slog.Logger, svc URLService) http.HandlerFunc {
 
 		responseShortener, err := svc.ShortenJSON(r.Context(), req.URL)
 		if err != nil && !errors.Is(err, model.ErrURLConflict) {
-			log.Error("service shortenJSON", "error", err)
+			log.Error("services shortenJSON", "error", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
