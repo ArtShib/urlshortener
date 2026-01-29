@@ -13,6 +13,7 @@ type FileConfig struct {
 	FileStoragePath string `json:"file_storage_path"`
 	DatabaseDSN     string `json:"database_dsn"`
 	EnableHTTPS     bool   `json:"enable_https"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 }
 
 // LoadConfigFile загрузка конфига из файла
@@ -50,5 +51,8 @@ func (cfg *FileConfig) LoadConfig(config *Config) {
 	}
 	if !config.TLSConfig.Enabled {
 		config.TLSConfig.Enabled = cfg.EnableHTTPS
+	}
+	if config.TrustedSubnet.Subnet == "" {
+		config.TrustedSubnet.Subnet = cfg.TrustedSubnet
 	}
 }

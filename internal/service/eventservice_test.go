@@ -31,7 +31,7 @@ func BenchmarkEventService_SendAuditRecord(b *testing.B) {
 	repo := &mockRepo{}
 	svc, err := NewEventService(repo, logger)
 	if err != nil {
-		b.Fatalf("failed to create service: %v", err)
+		b.Fatalf("failed to create services: %v", err)
 	}
 
 	record := &model.Event{
